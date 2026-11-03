@@ -40,7 +40,8 @@ None with code yet. The planned `vc_*` crates are listed under their areas below
 
 ## COMP: shell completion
 
-- 📋 **COMP-1 vc-complete**: `vc_complete`, bash, zsh and fish completion with live values and help texts on clap_complete's dynamic completion, the quoting bash adapter, and the rc block (guide section 5). v0.1.
+- ✅ **COMP-1 vc-complete**: `vc_complete`, bash, zsh and fish completion with live values and help texts on clap_complete's dynamic completion (guide section 5). One call at the top of `main` (`complete`, `complete_with` for extra registration lines such as a key binding); the quoting bash adapter with `@`, `:` and `=` word breaks and no file-name fallback, zsh with a menu for candidates that replace the word, fish with the picked-candidate mark (`vc_complete/src/adapters.rs`); candidate helpers `cand`, `filtered`, `values`, the line helpers `split_line`, `CurrentWord`, `comp_words`, `word_after` (`src/lib.rs`, `src/line.rs`). An error or a panic in a completer gives no candidates and nothing on stderr. Tests: `tests/protocol.rs` (bash as readline drives it, the zsh and fish answers), `tests/shells.rs` (TAB in bash, zsh and fish in a pty, a missing shell skipped with a line), driving the example CLI `examples/vcdemo.rs`. v0.1.
+- ✅ **COMP-2 rc-block**: `vc_complete::rc`, the marked completion block in `~/.bashrc`, `~/.zshrc` and fish's `config.fish` for a list of CLIs given by the caller, each sourced only where it is installed: added once, replaced in place when it differs, the hand-written `source <(COMPLETE=...)` lines it replaces taken out, a backup of the old file, and no line lost when the end marker is missing (`vc_complete/src/rc.rs`). v0.1.
 
 ## CMD: the command registry
 
