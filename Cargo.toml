@@ -8,9 +8,11 @@ version = "0.0.1"
 [workspace]
 resolver = "3"
 # The vc_* crates of the v0.1 foundation (vc_build, vc_ui, vc_complete) join here as they are written.
-members = ["repo_checks"]
+members = ["repo_checks", "vc_complete"]
 
 [workspace.dependencies]
+clap = { version = "4.6", default-features = false, features = ["std"] }
+clap_complete = { version = "4.6", default-features = false, features = ["unstable-dynamic"] }
 
 # Debug info in .dwo files next to the objects, not packed into every test binary: much quicker rebuilds after a
 # small change. Tests inherit it.

@@ -1,0 +1,18 @@
+[package]
+name = "vc_complete"
+description = "Shell completion for clap CLIs: bash, zsh and fish with live values and help texts, a quoting bash adapter, and the shell rc block"
+keywords = ["cli", "completion", "clap", "bash", "zsh"]
+categories = ["command-line-interface"]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+clap_complete = { workspace = true }
+
+[dev-dependencies]
+clap = { workspace = true, features = ["error-context", "help", "usage"] }
+rustix = { version = "1.1", default-features = false, features = ["process", "pty", "std", "termios"] }

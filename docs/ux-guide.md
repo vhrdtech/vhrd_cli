@@ -154,7 +154,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 - 📘 **Completion is tested in the real shells.** Tests drive bash the way readline does (`COMP_LINE`, `COMP_WORDS`), and bash, zsh and fish in a pty where they are installed; a missing shell is skipped with a line.
   - Example: one internal CLI's `tests/completion.rs`, `tests/complete_shells.rs`.
   - [an internal CLI's CLI-7]
-- 🔜 **One shared adapter crate** instead of copies of `ww`'s bash adapter: `vc_complete` in this repo (v0.1). Until then a copy says where it came from and is kept in sync.
+- 📘 **One shared adapter crate** instead of copies of `ww`'s bash adapter: `vc_complete` in this repo, with one call at the top of `main` (`vc_complete::complete(cli)`), live values through `vc_complete::values`, and `vc_complete::rc` for the block in the shell's config. A CLI that still carries a copy says where it came from and moves to the crate when touched.
 
 ### 5.1 Built: the picker on Tab (LIB-11)
 
