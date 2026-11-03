@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.0.0] - 2026-11-03
+
 ### Added
 
 - The Cargo workspace, dual-licensed MIT or Apache-2.0, with README, AGENTS.md, FEATURES.md and the just recipes `test` (with `--changed`), `lint`, `install` and `deploy` (REPO-1).
