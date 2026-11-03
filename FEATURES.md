@@ -32,7 +32,7 @@ None with code yet. The planned `vc_*` crates are listed under their areas below
 
 ## VER: the --version line
 
-- 📋 **VER-1 vc-build**: `vc_build`, the `--version` line `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20)` from a worktree-safe `build.rs` helper without extra crates (guide section 11). v0.1.
+- ✅ **VER-1 vc-build**: [`vc_build`](vc_build/src/lib.rs), the `--version` line `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)` from a worktree-safe `build.rs` helper without extra crates (guide section 11): `vc_build::emit()` in build.rs, `build_info!()` and `Info::line()` in the binary. The commit's time, `-dirty` from `git status --porcelain`, `unknown` without git. v0.1.
 
 ## UI: colour, errors and safe printing
 

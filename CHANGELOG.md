@@ -4,6 +4,10 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- `vc_build`: the `--version` line `0.3.1 (efc600d, commit 26 Oct 2026 10:02 UTC)` from one call in `build.rs` and `build_info!()` in the binary; worktree-safe, std only (VER-1).
+
 ## [0.0.0] - 2026-11-03
 
 ### Added

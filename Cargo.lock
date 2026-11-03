@@ -5,3 +5,7 @@ version = 4
 [[package]]
 name = "repo_checks"
 version = "0.0.0"
+
+[[package]]
+name = "vc_build"
+version = "0.0.0"
