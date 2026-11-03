@@ -10,6 +10,7 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 - `vc_complete::rc`: the marked completion block in the bash, zsh and fish config files for a list of CLIs, written once, replaced when it changes, and taking the place of hand-written registration lines (COMP-2).
 - `vc_ui`: colour from one style set with `--color auto|always|never`, off without a terminal or with `NO_COLOR`; paint helpers, `visible_width` and `strip_ansi`; the error line with the tool's name and the whole cause chain; the `Exit` type (0, 1, 2, tool categories 3 to 63, 75 and 78) and `finish` for the end of `main`; `Untrusted` escaping of outside strings; `restore_sigpipe` so `tool | head` ends quietly (UI-1).
 - The CLI UX guide says the range of a tool's own exit categories, 3 to 63 (UI-1).
+- `vc_build`: the `--version` line `0.3.1 (efc600d, commit 26 Oct 2026 10:02 UTC)` from one call in `build.rs` and `build_info!()` in the binary; worktree-safe, std only (VER-1).
 
 ## [0.0.1] - 2026-11-07
 

@@ -294,7 +294,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 ## 11. Version, usage and the skill tree
 
-- 🔒 **`--version` shows version, git SHA and commit time:** `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20)`. Rust: a small `build.rs` without extra crates (`git rev-parse --short HEAD`; the commit time from `git log -1 --format=%ct`; `-dirty` when `git status --porcelain` isn't empty; worktree-safe `rerun-if-changed` on the real git dir's `HEAD` and `index`; `unknown` without git). An internal CLI's is the model, and `vc_build` in this repo is its shared form (v0.1). Python reads the SHA and commit date at run time; firmware reports through bedrock `fw_info`. A CLI that still says `built` is changed when touched.
+- 🔒 **`--version` shows version, git SHA and commit time:** `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)`. Rust: a small `build.rs` without extra crates (`git rev-parse --short HEAD`; the commit time from `git log -1 --format=%ct`; `-dirty` when `git status --porcelain` isn't empty; worktree-safe `rerun-if-changed` on the real git dir's `HEAD` and `index`; `unknown` without git). An internal CLI's is the model, and `vc_build` in this repo is its shared form (v0.1). Python reads the SHA and commit date at run time; firmware reports through bedrock `fw_info`. A CLI that still says `built` is changed when touched.
   - Why: the same SHA gives the same line, and the installer and the deploys parse this line to tell releases apart.
   - [rule: "--version shows version, git SHA and commit time"]
 - 🔒 **Every invocation records its usage** per subcommand, and per flag with a meaning of its own, in the binary itself, locally and cheaply: from a terminal, a script or an agent session.

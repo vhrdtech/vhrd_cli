@@ -1,0 +1,13 @@
+[package]
+name = "vc_build"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The --version line of a CLI: version, git SHA and commit time, set from build.rs; std only"
+keywords = ["cli", "version", "build-script", "git"]
+categories = ["command-line-interface", "development-tools::build-utils"]
+
+# std only: a CLI takes this as a build-dependency and a dependency, and pulls nothing else with it
+[dependencies]
