@@ -229,7 +229,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Why: the cause is usually at the end; the full log is one command away.
   - Example: `... 812 earlier lines, the whole output: $XDG_STATE_HOME/TOOL/step-logs/TIME-NODE-WHAT.log`.
   - [an internal CLI's CLI-11; clig "if there is an error, make sure you print out the logs"]
-- 📘 **Exit codes are a documented contract.** 0 is success, 1 a failure with no more specific category, 2 bad arguments (clap's usage errors). A tool with categories scripts must tell apart documents them in one table and never renumbers one; a new category takes the next free number.
+- 📘 **Exit codes are a documented contract.** 0 is success, 1 a failure with no more specific category, 2 bad arguments (clap's usage errors). A tool with categories scripts must tell apart documents them in one table and never renumbers one; a new category takes the next free number. A tool's own categories take 3 to 63, below the sysexits range; 75 and 78 keep their sysexits meaning in every tool (next rule). Rust: `vc_ui::Exit`.
   - Example: `dg`: 3 no device, 4 device error, 5 timeout (`src/exit.rs`).
   - [typec_dongle `docs/design/cli/index.md` "Exit codes"; clig "Map the non-zero exit codes to the most important failure modes"]
 - 🔒 **78 means "can't work until someone acts".** A binary that can't run with its config (a bad setting, a database newer than the binary, a missing secret) exits 78 with one plain line, and its unit doesn't retry it. 75 is a temporary failure worth retrying (the deploy drain). Both come from BSD sysexits (`EX_CONFIG`, `EX_TEMPFAIL`).

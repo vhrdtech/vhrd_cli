@@ -1,0 +1,21 @@
+[package]
+name = "vc_ui"
+description = "Colour that turns off without a terminal, the error line, exit codes and safe printing of outside strings for Rust CLIs"
+keywords = ["cli", "color", "terminal", "exit-code", "no-color"]
+categories = ["command-line-interface"]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+anstyle.workspace = true
+clap = { workspace = true, features = ["derive"] }
+unicode-width.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true

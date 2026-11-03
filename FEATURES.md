@@ -36,7 +36,7 @@ None with code yet. The planned `vc_*` crates are listed under their areas below
 
 ## UI: colour, errors and safe printing
 
-- 📋 **UI-1 vc-ui**: `vc_ui`, one style set on anstyle/anstream that turns off without a TTY, with `NO_COLOR` or `--color never`; the error line prefixed with the tool's name; the exit code table; escaping of outside strings before they reach the terminal (guide sections 6 and 7). v0.1.
+- ✅ **UI-1 vc-ui**: `vc_ui`, on anstyle without indicatif. `--color auto|always|never` (`ColorFlag`), off per stream when it is not a terminal or with `NO_COLOR` set and not empty; one style set with paint helpers (good, warn, err, dim, id, date, status words, `next:` hints) and `Paint::ON`/`OFF` for tests; `visible_width` and `strip_ansi` (CSI, OSC, wide characters); the error line `tool: message: cause: cause`, escaped, red or yellow for a `Warning`; `Exit` with 0, 1, 2, tool categories 3 to 63, 75 and 78, and `finish` for the end of `main`; `Untrusted` and `escape` for outside strings; `restore_sigpipe` (guide sections 6 and 7). Tests: unit tests per module, `vc_ui/tests/process.rs` runs SIGPIPE, the error line and exit codes in a child process.
 
 ## COMP: shell completion
 
