@@ -1,0 +1,9 @@
+[package]
+name = "repo_checks"
+description = "Repo-wide checks of vhrd_cli: the UX guide's path, sections and links, no private paths in the docs"
+publish = false
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true

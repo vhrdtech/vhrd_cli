@@ -1,0 +1,4 @@
+[profile.default]
+# A test still running this long is hung rather than slow: warn at the period, kill after four of them, so a hung
+# test can't block `just test` forever.
+slow-timeout = { period = "30s", terminate-after = 4 }

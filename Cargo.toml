@@ -1,0 +1,26 @@
+[workspace.package]
+authors = ["Roman Isaikin <romix.lab@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vhrdtech/vhrd_cli"
+version = "0.0.0"
+
+[workspace]
+resolver = "3"
+# The vc_* crates of the v0.1 foundation (vc_build, vc_ui, vc_complete) join here as they are written.
+members = ["repo_checks"]
+
+[workspace.dependencies]
+
+# Debug info in .dwo files next to the objects, not packed into every test binary: much quicker rebuilds after a
+# small change. Tests inherit it.
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.release]
+strip = true
+
+# just install / just deploy: release, but incremental, so a rebuild after a small change is quick
+[profile.deploy]
+inherits = "release"
+incremental = true
