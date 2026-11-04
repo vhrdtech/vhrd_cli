@@ -45,7 +45,7 @@ A Cargo workspace from the start, edition 2024, one shared version (`[workspace.
 
 - `just test`: every test (cargo nextest, then the doc tests). `just test --changed`: only the crates changed against main and the crates that depend on them; run it before handing work over.
 - `just lint`: clippy with warnings as errors, `cargo fmt --check`, `cargo machete`. It only checks, never edits.
-- `just install`: build with the deploy profile (release, incremental). The crates are libraries, so nothing goes on PATH yet; when a binary comes (`vc_template`), `install` puts it on PATH exactly once: through `tpm install` when tpm is on PATH, otherwise `cargo install --locked --path CRATE`, never both.
+- `just install`: build with the deploy profile (release, incremental). The crates are libraries, so nothing goes on PATH yet; when a binary comes (`vc_template`), `install` puts it on PATH exactly once: through our internal installer when it's available, otherwise `cargo install --locked --path CRATE`, never both.
 - `just deploy`: refuse on local changes, `git pull --ff-only`, then `just install`.
 
 Tools: [cargo-nextest](https://nexte.st/), [cargo-machete](https://github.com/bnjbvr/cargo-machete), and `tpm` for `just test --changed` (without it the full run).
@@ -73,10 +73,10 @@ Conventional Commits with the crate as scope: `feat(vc_ui): ...`, `fix(vc_comple
 
 ## Landing and versions
 
-Work happens on a session branch. It reaches main only through `tpm land`, never a direct push or merge, and only when the maintainer agrees.
+Work happens on a session branch. It reaches main only through the maintainer's landing process, never a direct push or merge, and only when the maintainer agrees.
 
 - A branch never touches the version: no manifest bump, no `## [x.y.z]` heading, no tag. Its CHANGELOG entries go under `[Unreleased]`.
-- `tpm land` rebases the branch onto main, runs `just lint` and `just test` as the gate, and makes one `release: x.y.z` commit that bumps `[workspace.package]` and turns `[Unreleased]` into `## [x.y.z] - date`, with an annotated tag `vX.Y.Z`. Tags are never moved.
+- Landing rebases the branch onto main, runs `just lint` and `just test` as the gate, and makes one `release: x.y.z` commit that bumps `[workspace.package]` and turns `[Unreleased]` into `## [x.y.z] - date`, with an annotated tag `vX.Y.Z`. Tags are never moved.
 - Before 1.0, patch for additive or compatible changes, minor only for a breaking one. From 1.0, minor for Added/Deprecated, patch for fixes, major only when the maintainer says so.
 - Publishing a crate to crates.io waits for the maintainer's OK.
 
