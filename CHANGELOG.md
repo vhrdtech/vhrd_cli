@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-11-07
+
 ### Changed
 
 - docs: internal references removed
