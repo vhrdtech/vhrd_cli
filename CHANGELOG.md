@@ -11,6 +11,9 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 - `vc_ui`: colour from one style set with `--color auto|always|never`, off without a terminal or with `NO_COLOR`; paint helpers, `visible_width` and `strip_ansi`; the error line with the tool's name and the whole cause chain; the `Exit` type (0, 1, 2, tool categories 3 to 63, 75 and 78) and `finish` for the end of `main`; `Untrusted` escaping of outside strings; `restore_sigpipe` so `tool | head` ends quietly (UI-1).
 - The CLI UX guide says the range of a tool's own exit categories, 3 to 63 (UI-1).
 - `vc_build`: the `--version` line `0.3.1 (efc600d, commit 26 Oct 2026 10:02 UTC)` from one call in `build.rs` and `build_info!()` in the binary; worktree-safe, std only (VER-1).
+- `vc_build::version!()`: the line as a `&'static str` for clap's `#[command(version = ...)]` (VER-1).
+- `vc_ui::HEADING`: bold for a heading in a report (UI-1).
+- docs: README, AGENTS.md, FEATURES.md and the guide name the v0.1 crates and their entry points.
 
 ## [0.0.1] - 2026-11-07
 

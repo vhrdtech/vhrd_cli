@@ -38,8 +38,9 @@ mod untrusted;
 mod width;
 
 pub use color::{
-    BUSY, ColorChoice, ColorFlag, DATE, DIM, ERR, ID, NEXT, OK, Paint, Stream, WARN, color_choice,
-    date, dim, err, good, id, next_hint, paint, set_color, status, status_style, warn,
+    BUSY, ColorChoice, ColorFlag, DATE, DIM, ERR, HEADING, ID, NEXT, OK, Paint, Stream, WARN,
+    color_choice, date, dim, err, good, id, next_hint, paint, set_color, status, status_style,
+    warn,
 };
 pub use error::{ExitError, Warning, error_line, finish, is_broken_pipe};
 pub use exit::Exit;

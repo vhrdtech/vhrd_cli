@@ -20,7 +20,12 @@ This file is the single source of truth for what vhrd_cli does, what is broken a
 
 ## Crates
 
-None with code yet. The planned `vc_*` crates are listed under their areas below; `repo_checks` (not published) holds the repo-wide tests.
+- `vc_build`: the `--version` line (VER-1).
+- `vc_ui`: colour, the error line, exit codes, safe printing (UI-1).
+- `vc_complete`: shell completion and the rc block (COMP-1, COMP-2).
+- `repo_checks` (not published): the repo-wide tests.
+
+The other `vc_*` crates are planned under their areas below.
 
 ## GUIDE: the CLI UX guide
 
@@ -32,11 +37,11 @@ None with code yet. The planned `vc_*` crates are listed under their areas below
 
 ## VER: the --version line
 
-- ✅ **VER-1 vc-build**: [`vc_build`](vc_build/src/lib.rs), the `--version` line `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)` from a worktree-safe `build.rs` helper without extra crates (guide section 11): `vc_build::emit()` in build.rs, `build_info!()` and `Info::line()` in the binary. The commit's time, `-dirty` from `git status --porcelain`, `unknown` without git. v0.1.
+- ✅ **VER-1 vc-build**: [`vc_build`](vc_build/src/lib.rs), the `--version` line `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)` from a worktree-safe `build.rs` helper without extra crates (guide section 11): `vc_build::emit()` in build.rs, `build_info!()` and `Info::line()` in the binary, `version!()` for clap's `#[command(version = ...)]`. The commit's time, `-dirty` from `git status --porcelain`, `unknown` without git. v0.1.
 
 ## UI: colour, errors and safe printing
 
-- ✅ **UI-1 vc-ui**: `vc_ui`, on anstyle without indicatif. `--color auto|always|never` (`ColorFlag`), off per stream when it is not a terminal or with `NO_COLOR` set and not empty; one style set with paint helpers (good, warn, err, dim, id, date, status words, `next:` hints) and `Paint::ON`/`OFF` for tests; `visible_width` and `strip_ansi` (CSI, OSC, wide characters); the error line `tool: message: cause: cause`, escaped, red or yellow for a `Warning`; `Exit` with 0, 1, 2, tool categories 3 to 63, 75 and 78, and `finish` for the end of `main`; `Untrusted` and `escape` for outside strings; `restore_sigpipe` (guide sections 6 and 7). Tests: unit tests per module, `vc_ui/tests/process.rs` runs SIGPIPE, the error line and exit codes in a child process.
+- ✅ **UI-1 vc-ui**: `vc_ui`, on anstyle without indicatif. `--color auto|always|never` (`ColorFlag`), off per stream when it is not a terminal or with `NO_COLOR` set and not empty; one style set with paint helpers (good, warn, err, dim, id, date, status words, `next:` hints, `HEADING`) and `Paint::ON`/`OFF` for tests; `visible_width` and `strip_ansi` (CSI, OSC, wide characters); the error line `tool: message: cause: cause`, escaped, red or yellow for a `Warning`; `Exit` with 0, 1, 2, tool categories 3 to 63, 75 and 78, and `finish` for the end of `main`; `Untrusted` and `escape` for outside strings; `restore_sigpipe` (guide sections 6 and 7). Tests: unit tests per module, `vc_ui/tests/process.rs` runs SIGPIPE, the error line and exit codes in a child process.
 
 ## COMP: shell completion
 

@@ -22,6 +22,11 @@
 //! ```ignore
 //! // main.rs
 //! println!("{}", vc_build::build_info!().line_named("tool")); // tool 0.3.1 (efc600d, commit ...)
+//!
+//! // or with clap, which puts the binary's name in front
+//! #[derive(clap::Parser)]
+//! #[command(version = vc_build::version!())]
+//! struct Cli {}
 //! ```
 //!
 //! The commit time, not the clock, so a rebuild of an unchanged commit gives the same output. Both git values
@@ -73,6 +78,22 @@ macro_rules! build_info {
             sha: env!("VC_GIT_SHA"),
             time: env!("VC_COMMIT_TIME"),
         }
+    };
+}
+
+/// [`Info::line`] of the calling package as a `&'static str`, for clap's `#[command(version = vc_build::version!())]`,
+/// which takes no `String`. Needs [`emit`] in the package's `build.rs`, as [`build_info!`] does.
+#[macro_export]
+macro_rules! version {
+    () => {
+        concat!(
+            env!("CARGO_PKG_VERSION"),
+            " (",
+            env!("VC_GIT_SHA"),
+            ", commit ",
+            env!("VC_COMMIT_TIME"),
+            ")"
+        )
     };
 }
 

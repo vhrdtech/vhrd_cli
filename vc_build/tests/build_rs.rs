@@ -1,4 +1,4 @@
-//! The whole path: a scratch package with `vc_build::emit()` in its build.rs and `build_info!` in main prints the line.
+//! The whole path: a scratch package with `vc_build::emit()` in its build.rs and `build_info!` and `version!` in main print the line.
 
 use std::path::Path;
 use std::process::Command;
@@ -19,7 +19,7 @@ fn package_prints_its_version_line() {
     std::fs::write(root.join("build.rs"), "fn main() { vc_build::emit(); }\n").unwrap();
     std::fs::write(
         root.join("src/main.rs"),
-        "fn main() { println!(\"{}\", vc_build::build_info!().line_named(\"demo\")); }\n",
+        "fn main() {\n    println!(\"{}\", vc_build::build_info!().line_named(\"demo\"));\n    println!(\"demo {}\", vc_build::version!());\n}\n",
     )
     .unwrap();
 
@@ -43,6 +43,6 @@ fn package_prints_its_version_line() {
     );
     assert_eq!(
         String::from_utf8_lossy(&out.stdout).trim(),
-        "demo 1.2.3 (unknown, commit unknown)"
+        "demo 1.2.3 (unknown, commit unknown)\ndemo 1.2.3 (unknown, commit unknown)"
     );
 }

@@ -137,6 +137,8 @@ pub const DATE: Style = Style::new().dimmed();
 pub const DIM: Style = Style::new().dimmed();
 /// The word `next:` of a hint.
 pub const NEXT: Style = AnsiColor::Magenta.on_default().bold();
+/// A heading in a report: bold, no colour.
+pub const HEADING: Style = Style::new().bold();
 
 /// Paints text in a style when colour is on, and leaves it plain otherwise. [`Paint::stdout`] and
 /// [`Paint::stderr`] follow the run's colour choice; [`Paint::ON`] and [`Paint::OFF`] are fixed, for tests and

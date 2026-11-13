@@ -25,7 +25,7 @@ How to read it:
 2. 🔒 **Help explains.** `-h` is one line per item; `--help` says what a command is for, what it reads and writes, and gives examples.
 3. 🔒 **Colour helps reading** (statuses, ids, dates, warnings, errors, `next:` hints) and is off when not a TTY, with `NO_COLOR` or `--color never`.
 4. 🔒 **Anything over a few seconds shows progress**, and is quiet when not a TTY: one line per step for logs and agents.
-5. 🔒 **`--version` shows version, git SHA and commit time.**
+5. 🔒 **`--version` shows version, git SHA and commit time** (`vc_build`).
 6. 📘 **stdout is data, stderr is everything else.** Errors, progress and warnings never mix into what a pipe or an agent reads.
 7. 📘 **Every command has a machine-readable output** (`--json`), and that output is an interface: changed on purpose, with a CHANGELOG entry.
 8. 📘 **Errors start with the tool's name and say what to do.** Exit codes are a documented contract.
@@ -184,7 +184,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Why: `tool ... | jq` and an agent reading stdout never see noise.
   - Example: `dg power meter -f json | jq .current_ma`.
   - [dg design "Unix-philosophy"; clig "The Basics"; heroku "Stdout/Stderr"]
-- 🔒 **Colour for statuses, ids, dates, warnings, errors and `next:` hints, from one set of styles.** It is off when stdout is not a TTY, with `NO_COLOR` set to anything non-empty, or with `--color never`. Rust: `anstream`/`anstyle`, as clap does; no ncurses. Status emoji stay as they are.
+- 🔒 **Colour for statuses, ids, dates, warnings, errors and `next:` hints, from one set of styles.** It is off when stdout is not a TTY, with `NO_COLOR` set to anything non-empty, or with `--color never`. Rust: `anstream`/`anstyle`, as clap does; no ncurses; the styles and the flag are `vc_ui`'s (`OK`, `ERR`, `ID`, ..., `ColorFlag`, `Paint`). Status emoji stay as they are.
   - Why: colour makes a view scannable; escape codes in a pipe or a log are garbage.
   - Example: one internal CLI's CLI-9: statuses green, yellow or red, ids one colour, dates dim, warnings yellow, errors red.
   - [rule: "Colour"; no-color; an internal CLI's CLI-9]
@@ -210,7 +210,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - [an internal CLI's AGENTS.md "Conventions"; an internal records tool's REC-70; clig "Future-proofing"; rule: "Compatibility only for what is in use"]
 - 📘 **Strings from outside are escaped before they reach the terminal.** A device name, a label, an error text from another process or a page is printed with control characters and bidi overrides escaped; machine output relies on JSON's own escaping.
   - Why: a device could otherwise move the cursor, recolour the screen or make a line read in the wrong order.
-  - Example: `\u{1b}` and `\u{202e}` are shown as text. Escape the outside piece first, then add the tool's own colour around it.
+  - Example: `\u{1b}` and `\u{202e}` are shown as text (`vc_ui::escape`, `vc_ui::Untrusted`). Escape the outside piece first, then add the tool's own colour around it.
   - [wire_weaver `untrusted.rs`, TOOL-19]
 - 📘 **A run at a terminal stands apart from the shell around it.** A long command opens with a rule (`tool deploy REPO · 10 Oct 2026 16:11 · on PC · tool VERSION`), indents its output, and closes with `═══ tool deploy REPO took 12s · ok ═══`. Notices that would come first wait until after the header. The frame appears only at a terminal, so scripts and agents keep their lines.
   - [an internal CLI's CLI-11]
@@ -219,7 +219,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 ## 7. Errors and exit codes
 
-- 📘 **An error is one line on stderr that starts with the tool's name and says what to do.**
+- 📘 **An error is one line on stderr that starts with the tool's name and says what to do** (`vc_ui::error_line`, `vc_ui::finish`).
   - Why: the person reads the fix, not a backtrace; the prefix tells which tool spoke inside a pipeline.
   - Example (the shape): `tool: no task 2618#99 (tool ls PROJECT lists its tasks)`.
   - [an internal CLI's AGENTS.md "Conventions"; dg design "Errors under json"; clig "Catch errors and rewrite them for humans"]
@@ -294,7 +294,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 ## 11. Version, usage and the skill tree
 
-- 🔒 **`--version` shows version, git SHA and commit time:** `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)`. Rust: a small `build.rs` without extra crates (`git rev-parse --short HEAD`; the commit time from `git log -1 --format=%ct`; `-dirty` when `git status --porcelain` isn't empty; worktree-safe `rerun-if-changed` on the real git dir's `HEAD` and `index`; `unknown` without git). An internal CLI's is the model, and `vc_build` in this repo is its shared form (v0.1). Python reads the SHA and commit date at run time; firmware reports through bedrock `fw_info`. A CLI that still says `built` is changed when touched.
+- 🔒 **`--version` shows version, git SHA and commit time:** `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)`. Rust: a small `build.rs` without extra crates (`git rev-parse --short HEAD`; the commit time from `git log -1 --format=%ct`; `-dirty` when `git status --porcelain` isn't empty; worktree-safe `rerun-if-changed` on the real git dir's `HEAD` and `index`; `unknown` without git). An internal CLI's is the model, and `vc_build` in this repo is its shared form: `vc_build::emit()` in `build.rs`, `#[command(version = vc_build::version!())]`. Python reads the SHA and commit date at run time; firmware reports through bedrock `fw_info`. A CLI that still says `built` is changed when touched.
   - Why: the same SHA gives the same line, and the installer and the deploys parse this line to tell releases apart.
   - [rule: "--version shows version, git SHA and commit time"]
 - 🔒 **Every invocation records its usage** per subcommand, and per flag with a meaning of its own, in the binary itself, locally and cheaply: from a terminal, a script or an agent session.

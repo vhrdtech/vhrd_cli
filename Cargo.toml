@@ -7,7 +7,6 @@ version = "0.0.1"
 
 [workspace]
 resolver = "3"
-# The vc_* crates of the v0.1 foundation (vc_build, vc_ui, vc_complete) join here as they are written.
 members = ["repo_checks", "vc_build", "vc_complete", "vc_ui"]
 
 [workspace.dependencies]
