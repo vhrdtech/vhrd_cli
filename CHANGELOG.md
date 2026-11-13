@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-11-14
+
 ### Added
 
 - `vc_complete`: bash, zsh and fish completion for clap CLIs with live values and help texts, on clap_complete's dynamic completion. One call at the top of `main`; a bash adapter that quotes values and handles the `@`, `:` and `=` word breaks without falling back to file names; zsh offers candidates that replace the typed word in a menu; fish takes a picker's choice. A failing or panicking completer gives no candidates and prints nothing. Helpers for candidates (`cand`, `filtered`, `values`) and the line being completed (`split_line`, `comp_words`, `word_after`), and the example CLI `vcdemo` (COMP-1).
