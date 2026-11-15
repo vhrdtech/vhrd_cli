@@ -175,7 +175,25 @@ pub fn emit() {
 /// ```
 pub fn format_time(secs: i64) -> String {
     let (days, rest) = (secs.div_euclid(86400), secs.rem_euclid(86400));
-    // Civil date from days since 1970-01-01 (Howard Hinnant's algorithm)
+    let (year, month, day) = civil_date(days);
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    format!(
+        "{day} {} {year} {:02}:{:02} UTC",
+        MONTHS[usize::from(month - 1)],
+        rest / 3600,
+        rest % 3600 / 60
+    )
+}
+
+/// The civil date `(year, month, day)` of a day counted from 1970-01-01 (Howard Hinnant's algorithm).
+///
+/// ```
+/// assert_eq!(vc_build::civil_date(0), (1970, 1, 1));
+/// assert_eq!(vc_build::civil_date(20_772), (2026, 11, 15));
+/// ```
+pub fn civil_date(days: i64) -> (i64, u8, u8) {
     let z = days + 719468;
     let era = z.div_euclid(146097);
     let doe = z - era * 146097;
@@ -185,15 +203,8 @@ pub fn format_time(secs: i64) -> String {
     let day = doy - (153 * mp + 2) / 5 + 1;
     let month = if mp < 10 { mp + 3 } else { mp - 9 };
     let year = yoe + era * 400 + i64::from(month <= 2);
-    const MONTHS: [&str; 12] = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-    format!(
-        "{day} {} {year} {:02}:{:02} UTC",
-        MONTHS[(month - 1) as usize],
-        rest / 3600,
-        rest % 3600 / 60
-    )
+    // day is 1..=31 and month 1..=12 by the algorithm
+    (year, month as u8, day as u8)
 }
 
 #[cfg(test)]
