@@ -37,7 +37,7 @@ A Cargo workspace from the start, edition 2024, one shared version (`[workspace.
 
 - `docs/ux-guide.md`: the CLI UX guide.
 - `repo_checks/`: not published; tests only (`tests/docs.rs`): the guide's path, sections and links, and no private paths in any Markdown file.
-- `vc_build`, `vc_ui`, `vc_complete`: the v0.1 crates. The others join as they are written (FEATURES.md lists them): `vc_cmd`, `vc_usage`, `vc_steps`, `vc_template` (v0.2), `vc_picker` (v0.3).
+- `vc_build`, `vc_ui`, `vc_complete`: the v0.1 crates; `vc_usage` (v0.2). The others join as they are written (FEATURES.md lists them): `vc_cmd`, `vc_steps`, `vc_template` (v0.2), `vc_picker` (v0.3).
 
 **The workspace rule:** each crate does one job, so a CLI depends on only what it uses. Heavy parts (indicatif, ratatui with crossterm, a fuzzy matcher) sit in crates of their own and are never pulled in by a light crate such as `vc_build` or `vc_ui`. A crate that grows past about 20,000 lines, or holds parts that change at their own pace, is split before it grows on. Shared dependency versions go in the root `[workspace.dependencies]`.
 

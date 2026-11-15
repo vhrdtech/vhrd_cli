@@ -6,6 +6,7 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ### Added
 
+- `vc_usage`: each run counted per subcommand and flag in a bounded local file, and a report listing the unused parts (USAGE-1).
 - `vc_build::civil_date`: the civil date of a day counted from 1970-01-01, the one date helper the crates share (VER-1).
 
 ## [0.0.2] - 2026-11-14

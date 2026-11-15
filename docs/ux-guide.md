@@ -299,6 +299,11 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - [rule: "--version shows version, git SHA and commit time"]
 - 🔒 **Every invocation records its usage** per subcommand, and per flag with a meaning of its own, in the binary itself, locally and cheaply: from a terminal, a script or an agent session.
   - Why: parts nobody uses can be found and removed.
+  - Rust: `vc_usage`. `vc_usage::record(&Cli::command(), &matches, None)` right after parsing; the signals come from clap's tree and matches: the command path (`spl tools needed`), each flag given on the command line or by its environment variable (`spl check --fix`), and the value of a flag with a fixed set of values (`spl check --format=json`). Positional arguments and free-form values are never recorded.
+  - Where: `$XDG_STATE_HOME/TOOL/usage` (default `~/.local/state/TOOL/usage`), or `TOOL_USAGE_DIR`; `TOOL_USAGE_DIR=off` turns recording off. Nothing leaves the machine.
+  - Cheap and bounded: one append per run to a log that is folded into a counts file at 64 KiB (`LOG_BYTES_MAX`); the counts keep the 2048 signals used last (`SIGNALS_MAX`). A record that cannot be written is dropped without a word: recording never fails or slows a run.
+  - Source per run: `agent` inside an agent session (`CLAUDECODE` set), `terminal` when stdin is one, `script` otherwise; `VC_USAGE_SOURCE` names it for a harness.
+  - A `TOOL usage` command shows the counts per source and the last day for every part of the tree, the never-used ones included (`vc_usage::known`, `rows`, `text`).
   - Example: an internal CLI's own usage recorder (signals like `d picker`).
   - [rule: "Every invocation records its usage"]
 - 🔒 **Every feature a user can learn lands in the skill tree** in the same piece of work: its usage signal, its skill in `skilltree.toml`, its strings in every `locales/<lang>/skilltree.ftl`. When that doesn't fit, a task names what is missing.

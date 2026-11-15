@@ -23,6 +23,7 @@ This file is the single source of truth for what vhrd_cli does, what is broken a
 - `vc_build`: the `--version` line (VER-1).
 - `vc_ui`: colour, the error line, exit codes, safe printing (UI-1).
 - `vc_complete`: shell completion and the rc block (COMP-1, COMP-2).
+- `vc_usage`: usage records per subcommand and flag, and their report (USAGE-1).
 - `repo_checks` (not published): the repo-wide tests.
 
 The other `vc_*` crates are planned under their areas below.
@@ -54,7 +55,7 @@ The other `vc_*` crates are planned under their areas below.
 
 ## USAGE: usage records
 
-- 📋 **USAGE-1 vc-usage**: `vc_usage`, a local, cheap record of each invocation per subcommand and per meaningful flag (guide section 11). v0.2.
+- ✅ **USAGE-1 vc-usage**: [`vc_usage`](vc_usage/src/lib.rs), a local, cheap record of each invocation per subcommand and per flag (guide section 11). Signals from clap's tree and matches, never positional or free-form values (`signal.rs`); an append-only log under `$XDG_STATE_HOME/TOOL/usage` (`TOOL_USAGE_DIR`, `off`) folded under a lock into a counts file at `LOG_BYTES_MAX`, at most `SIGNALS_MAX` signals, the source per run (terminal, script, agent) (`store.rs`); the report of every signal of the tree with its counts, the never-used ones included (`report.rs`). `record` never fails or prints. Tests: unit tests per module, scratch directories only. v0.2.
 
 ## STEPS: long runs
 

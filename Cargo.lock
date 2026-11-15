@@ -196,6 +196,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "vc_usage"
+version = "0.0.2"
+dependencies = [
+ "clap",
+ "vc_build",
+ "vc_ui",
+]
+
+[[package]]
 name = "windows-link"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

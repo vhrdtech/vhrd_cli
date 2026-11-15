@@ -1,0 +1,18 @@
+[package]
+name = "vc_usage"
+description = "Usage records for clap CLIs: each invocation counted per subcommand and flag in a small local file, and a report that names the unused parts"
+keywords = ["cli", "usage", "clap", "statistics"]
+categories = ["command-line-interface"]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+vc_build.workspace = true
+vc_ui.workspace = true
+
+[dev-dependencies]
+clap = { workspace = true, features = ["derive", "env"] }

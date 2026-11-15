@@ -7,7 +7,8 @@ Small shared crates for Rust command-line tools, and the guide they follow: the 
   - `vc_build`: the `--version` line with version, git SHA and commit time.
   - `vc_ui`: colour that turns off without a terminal or with `NO_COLOR`, the error line, exit codes, safe printing of outside strings.
   - `vc_complete`: bash, zsh and fish completion with live values and help texts, on clap's dynamic completion.
-  - planned: `vc_cmd`, `vc_usage`, `vc_steps`: commands that register themselves, usage records, steps with progress, tables and deploy summaries.
+  - `vc_usage`: each run counted per subcommand and flag in a small local file, and a report that names the parts nobody uses.
+  - planned: `vc_cmd`, `vc_steps`: commands that register themselves, steps with progress, tables and deploy summaries.
   - planned: `vc_picker`: the picker on Tab when a value has several hits.
   - planned: `vc_template`: a small CLI that shows every piece.
 
