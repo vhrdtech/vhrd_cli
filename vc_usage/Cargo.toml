@@ -8,6 +8,8 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true
+# File::try_lock
+rust-version = "1.89"
 
 [dependencies]
 clap = { workspace = true }

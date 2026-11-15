@@ -45,8 +45,8 @@ pub fn signals(cmd: &Command, m: &ArgMatches) -> Vec<String> {
     out
 }
 
-/// Every signal the tree can give: each command path, each flag, each value of a flag with a fixed set, in the
-/// tree's order. The report lists them all, so a part never used shows with a count of 0.
+/// Every signal the tree can give: each command path that runs (one that requires a subcommand does not), each
+/// flag, each value of a flag with a fixed set, in the tree's order. The report lists them all, so a part never used shows with a count of 0.
 ///
 /// ```
 /// use clap::{Arg, ArgAction, Command};
@@ -62,7 +62,10 @@ pub fn known(cmd: &Command) -> Vec<String> {
 }
 
 fn walk(cmd: &Command, path: &str, out: &mut Vec<String>) {
-    out.push(path.to_owned());
+    // a command that cannot run without a subcommand is never a signal of its own
+    if !(cmd.has_subcommands() && cmd.is_subcommand_required_set()) {
+        out.push(path.to_owned());
+    }
     for arg in cmd.get_arguments().filter(|a| !a.is_positional()) {
         let flag = format!("{path} {}", label(arg));
         let values = fixed_values(arg);
@@ -167,7 +170,11 @@ mod tests {
                     )
                     .arg(Arg::new("today").long("today").env("TOOL_TEST_TODAY")),
             )
-            .subcommand(Command::new("tools").subcommand(Command::new("needed")))
+            .subcommand(
+                Command::new("tools")
+                    .subcommand_required(true)
+                    .subcommand(Command::new("needed")),
+            )
     }
 
     fn run(args: &[&str]) -> Vec<String> {
@@ -219,6 +226,29 @@ mod tests {
     }
 
     #[test]
+    fn known_skips_commands_that_need_a_subcommand() {
+        let cmd = Command::new("tool")
+            .subcommand_required(true)
+            .arg(Arg::new("quiet").long("quiet").action(ArgAction::SetTrue))
+            .subcommand(
+                Command::new("tools")
+                    .subcommand_required(true)
+                    .subcommand(Command::new("needed")),
+            )
+            .subcommand(Command::new("cache").subcommand(Command::new("clear")));
+        // `tool` and `tool tools` cannot run alone; `tool cache` can, so it stays
+        assert_eq!(
+            known(&cmd),
+            [
+                "tool --quiet",
+                "tool tools needed",
+                "tool cache",
+                "tool cache clear"
+            ]
+        );
+    }
+
+    #[test]
     fn known_lists_the_whole_tree() {
         assert_eq!(
             known(&tool()),
@@ -234,7 +264,6 @@ mod tests {
                 "tool check --format=text",
                 "tool check --format=json",
                 "tool check --today",
-                "tool tools",
                 "tool tools needed",
             ]
         );
