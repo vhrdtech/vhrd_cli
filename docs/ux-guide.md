@@ -33,7 +33,7 @@ How to read it:
 10. 🔒 **Disabled says why.** A menu entry or action that can't run now is shown with the reason and what would enable it.
 11. 💡 **Prompts only at a terminal**, always with a flag that answers them; dangerous steps confirm, and `--dry-run` shows the plan first.
 12. 🔒 **Commands register themselves** in their own module; help, completion and usage signals come from that one registry.
-13. 🔒 **Every invocation records its usage** per subcommand, and each learnable feature lands in the skill tree.
+13. 🔒 **A large CLI may record its usage, opt-in** per subcommand, off until the person enables it; each learnable feature lands in the skill tree.
 14. 🔒 **Deploys read like a good installer**: a step per node, times, real progress bars and a summary table.
 
 ## 2. Rules for every UI
@@ -297,15 +297,15 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 - 🔒 **`--version` shows version, git SHA and commit time:** `tool 0.4.2 (a1b2c3d-dirty, commit 3 Oct 2026 18:20 UTC)`. Rust: a small `build.rs` without extra crates (`git rev-parse --short HEAD`; the commit time from `git log -1 --format=%ct`; `-dirty` when `git status --porcelain` isn't empty; worktree-safe `rerun-if-changed` on the real git dir's `HEAD` and `index`; `unknown` without git). An internal CLI's is the model, and `vc_build` in this repo is its shared form: `vc_build::emit()` in `build.rs`, `#[command(version = vc_build::version!())]`. Python reads the SHA and commit date at run time; firmware reports through bedrock `fw_info`. A CLI that still says `built` is changed when touched.
   - Why: the same SHA gives the same line, and the installer and the deploys parse this line to tell releases apart.
   - [rule: "--version shows version, git SHA and commit time"]
-- 🔒 **Every invocation records its usage** per subcommand, and per flag with a meaning of its own, in the binary itself, locally and cheaply: from a terminal, a script or an agent session.
+- 🔒 **A large CLI may record its usage, opt-in.** A CLI with more than a handful of subcommands may record each invocation per subcommand, and per flag with a meaning of its own, in the binary itself, locally and cheaply: from a terminal, a script or an agent session. Opt-in, off by default: nothing is recorded until the person enables it. Small single-purpose tools (a linter, a converter) need none.
   - Why: parts nobody uses can be found and removed.
   - Rust: `vc_usage`. `vc_usage::record(&Cli::command(), &matches, None)` right after parsing; the signals come from clap's tree and matches: the command path (`spl tools needed`), each flag given on the command line or by its environment variable (`spl check --fix`), and the value of a flag with a fixed set of values (`spl check --format=json`). Positional arguments and free-form values are never recorded.
-  - Where: `$XDG_STATE_HOME/TOOL/usage` (default `~/.local/state/TOOL/usage`), or `TOOL_USAGE_DIR`; `TOOL_USAGE_DIR=off` turns recording off. Nothing leaves the machine.
+  - Where: off by default. `TOOL_USAGE_DIR=DIR` records into `DIR`; `TOOL_USAGE=on` records into `$XDG_STATE_HOME/TOOL/usage` (default `~/.local/state/TOOL/usage`). `TOOL_USAGE_DIR=off` turns recording off even then. Nothing leaves the machine.
   - Cheap and bounded: one append per run to a log that is folded into a counts file at 64 KiB (`LOG_BYTES_MAX`); the counts keep the 2048 signals used last (`SIGNALS_MAX`). A record that cannot be written is dropped without a word: recording never fails or slows a run.
   - Source per run: `agent` inside an agent session (`CLAUDECODE` set), `terminal` when stdin is one, `script` otherwise; `VC_USAGE_SOURCE` names it for a harness.
-  - A `TOOL usage` command shows the counts per source and the last day for every part of the tree, the never-used ones included (`vc_usage::known`, `rows`, `text`).
+  - A `TOOL usage` command shows the counts per source and the last day for every part of the tree, the never-used ones included (`vc_usage::known`, `rows`, `text`); with nothing recorded, it says in one line how to enable it.
   - Example: an internal CLI's own usage recorder (signals like `d picker`).
-  - [rule: "Every invocation records its usage"]
+  - [rule: "Large CLIs may record their usage, opt-in"]
 - 🔒 **Every feature a user can learn lands in the skill tree** in the same piece of work: its usage signal, its skill in `skilltree.toml`, its strings in every `locales/<lang>/skilltree.ftl`. When that doesn't fit, a task names what is missing.
   - [rule: "Every feature a user can learn lands in the skill tree"]
 
@@ -348,6 +348,6 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 ## Where the rules point here
 
-- **House rules:** "CLIs are high quality", "CLI quality", "--version shows version, git SHA and commit time", "Nothing is hidden", "Disabled things say why", "Measure the input", "Commands register themselves" and "Every invocation records its usage" are restated here.
+- **House rules:** "CLIs are high quality", "CLI quality", "--version shows version, git SHA and commit time", "Nothing is hidden", "Disabled things say why", "Measure the input", "Commands register themselves" and "Large CLIs may record their usage, opt-in" are restated here.
 - **Repo AGENTS.md files:** wire_weaver, typec_dongle, gw121, saleae_rs, m2k, mdcheck, choreograph, cnt, fpga_tools and our other internal CLIs point here for CLI work, as does this repo's [AGENTS.md](../AGENTS.md).
 - **GUI twin:** [vhrd_egui's UX guide](https://github.com/vhrdtech/vhrd_egui/blob/main/docs/ux-guide.md) holds the rules every UI shares (its section 2); section 2 here links to it.

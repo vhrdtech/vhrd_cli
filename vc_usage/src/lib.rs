@@ -5,8 +5,9 @@
 //! - The signals come from clap's own tree and parsed matches ([`signals`], [`known`]): the command path, each
 //!   flag given, and the value of a flag with a fixed set of values. Positional arguments and free-form values
 //!   are never recorded.
-//! - The store is a directory under the XDG state dir ([`Store::locate`]): an append-only log, folded into a
-//!   counts file when it reaches [`LOG_BYTES_MAX`]. Nothing leaves the machine.
+//! - Opt-in, off by default ([`Store::locate`]): nothing is recorded until `<TOOL>_USAGE_DIR` names a
+//!   directory, or `<TOOL>_USAGE=on` turns it on at the default directory under the XDG state dir. An
+//!   append-only log is folded into a counts file when it reaches [`LOG_BYTES_MAX`]. Nothing leaves the machine.
 //! - Recording never fails a run and prints nothing: [`record`] drops any error.
 //!
 //! A `main` that records, and a `usage` command that shows the counts:
@@ -63,6 +64,7 @@ use std::io::IsTerminal;
 /// Records this run in the tool's store: the signals of `matches` against `cmd` (named after `cmd`'s name),
 /// the source from the environment and stdin, on `today` (default: the system clock's day in UTC).
 ///
+/// Opt-in, off by default ([`Store::locate`]): this is a no-op until the person enables recording.
 /// Never fails and never prints: a store that cannot be found or written loses this record, nothing else.
 pub fn record(cmd: &Command, matches: &ArgMatches, today: Option<Day>) {
     let env = |k: &str| std::env::var_os(k);

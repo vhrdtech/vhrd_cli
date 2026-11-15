@@ -55,7 +55,8 @@ The other `vc_*` crates are planned under their areas below.
 
 ## USAGE: usage records
 
-- ✅ **USAGE-1 vc-usage**: [`vc_usage`](vc_usage/src/lib.rs), a local, cheap record of each invocation per subcommand and per flag (guide section 11). Signals from clap's tree and matches, never positional or free-form values (`signal.rs`); an append-only log under `$XDG_STATE_HOME/TOOL/usage` (`TOOL_USAGE_DIR`, `off`) folded under a lock into a counts file at `LOG_BYTES_MAX`, at most `SIGNALS_MAX` signals, the source per run (terminal, script, agent) (`store.rs`); the report of every signal of the tree with its counts, the never-used ones included (`report.rs`). `record` never fails or prints. Tests: unit tests per module, scratch directories only. v0.2.
+- ✅ **USAGE-1 vc-usage**: [`vc_usage`](vc_usage/src/lib.rs), a local, cheap record of each invocation per subcommand and per flag (guide section 11). Signals from clap's tree and matches, never positional or free-form values (`signal.rs`); an append-only log folded under a lock into a counts file at `LOG_BYTES_MAX`, at most `SIGNALS_MAX` signals, the source per run (terminal, script, agent) (`store.rs`); the report of every signal of the tree with its counts, the never-used ones included (`report.rs`). `record` never fails or prints. Tests: unit tests per module, scratch directories only. v0.2.
+- ✅ **USAGE-2 vc-usage-opt-in**: recording is opt-in, off by default (`Store::locate`, `store.rs`): nothing until `TOOL_USAGE_DIR=DIR` or `TOOL_USAGE=on`; `TOOL_USAGE_DIR=off` stays off even then. No directory is created until enabled. v0.2.
 
 ## STEPS: long runs
 

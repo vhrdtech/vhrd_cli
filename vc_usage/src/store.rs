@@ -4,6 +4,8 @@
 //! - `counts.tsv`: one line per signal, `signal<TAB>terminal<TAB>script<TAB>agent<TAB>first<TAB>last`.
 //! - `fold.tsv`: the log while it is folded; `lock`: held while folding.
 //!
+//! Opt-in, off by default ([`Store::locate`]): nothing is recorded until the person enables it.
+//!
 //! A run only appends. Once the log reaches [`Limits::log_bytes_max`], the run that finds it so folds it into the
 //! counts under the lock; when another run holds the lock the record is dropped, so the log never grows past
 //! the limit. The counts keep at most [`Limits::signals_max`] signals, the ones used last.
@@ -225,23 +227,36 @@ impl Store {
         &self.dir
     }
 
-    /// The directory of `tool`'s store, `None` when recording is off: `<TOOL>_USAGE_DIR` (`off` turns recording
-    /// off), else `$XDG_STATE_HOME/<tool>/usage`, else `$HOME/.local/state/<tool>/usage`. `env` looks a variable
-    /// up (`std::env::var_os` in a binary).
+    /// The directory of `tool`'s store, `None` when recording is off (the default): nothing is recorded until
+    /// `<TOOL>_USAGE_DIR` names a directory, or `<TOOL>_USAGE=on` turns it on at `$XDG_STATE_HOME/<tool>/usage`
+    /// (else `$HOME/.local/state/<tool>/usage`). `<TOOL>_USAGE_DIR=off` turns it off even then. `env` looks a
+    /// variable up (`std::env::var_os` in a binary).
     ///
     /// ```
     /// use std::ffi::OsString;
     /// use std::path::PathBuf;
     ///
-    /// let env = |k: &str| (k == "HOME").then(|| OsString::from("/home/a"));
-    /// assert_eq!(vc_usage::Store::locate("spl", env), Some(PathBuf::from("/home/a/.local/state/spl/usage")));
-    /// let off = |k: &str| (k == "SPL_USAGE_DIR").then(|| OsString::from("off"));
-    /// assert_eq!(vc_usage::Store::locate("spl", off), None);
+    /// let none = |_: &str| None;
+    /// assert_eq!(vc_usage::Store::locate("spl", none), None);
+    ///
+    /// let dir = |k: &str| (k == "SPL_USAGE_DIR").then(|| OsString::from("/s/u"));
+    /// assert_eq!(vc_usage::Store::locate("spl", dir), Some(PathBuf::from("/s/u")));
+    ///
+    /// let on = |k: &str| match k {
+    ///     "SPL_USAGE" => Some(OsString::from("on")),
+    ///     "HOME" => Some(OsString::from("/home/a")),
+    ///     _ => None,
+    /// };
+    /// assert_eq!(vc_usage::Store::locate("spl", on), Some(PathBuf::from("/home/a/.local/state/spl/usage")));
     /// ```
     pub fn locate(tool: &str, env: impl Fn(&str) -> Option<OsString>) -> Option<PathBuf> {
-        let var = format!("{}_USAGE_DIR", tool.to_uppercase().replace('-', "_"));
-        if let Some(dir) = env(&var).filter(|v| !v.is_empty()) {
+        let base = tool.to_uppercase().replace('-', "_");
+        let dir_var = format!("{base}_USAGE_DIR");
+        if let Some(dir) = env(&dir_var).filter(|v| !v.is_empty()) {
             return (dir != "off").then(|| PathBuf::from(dir));
+        }
+        if env(&format!("{base}_USAGE")).as_deref() != Some(std::ffi::OsStr::new("on")) {
+            return None;
         }
         let state = env("XDG_STATE_HOME")
             .map(PathBuf::from)
@@ -612,19 +627,44 @@ mod tests {
                     .map(|(_, v)| OsString::from(v))
             }
         };
+        // off by default: nothing enables it
+        assert_eq!(Store::locate("t", env(&[])), None);
+        assert_eq!(Store::locate("t", env(&[("HOME", "/h")])), None);
+        // an explicit directory opts in
         assert_eq!(
             Store::locate("my-tool", env(&[("MY_TOOL_USAGE_DIR", "/s/u")])),
             Some(PathBuf::from("/s/u"))
         );
+        // TOOL_USAGE=on opts in at the default path
         assert_eq!(
-            Store::locate("t", env(&[("XDG_STATE_HOME", "/x"), ("HOME", "/h")])),
+            Store::locate("t", env(&[("T_USAGE", "on"), ("XDG_STATE_HOME", "/x")])),
             Some(PathBuf::from("/x/t/usage"))
         );
         assert_eq!(
-            Store::locate("t", env(&[("XDG_STATE_HOME", "rel"), ("HOME", "/h")])),
+            Store::locate("t", env(&[("T_USAGE", "on"), ("HOME", "/h")])),
             Some(PathBuf::from("/h/.local/state/t/usage"))
         );
-        assert_eq!(Store::locate("t", env(&[])), None);
+        // a relative XDG_STATE_HOME falls back to HOME
+        assert_eq!(
+            Store::locate(
+                "t",
+                env(&[("T_USAGE", "on"), ("XDG_STATE_HOME", "rel"), ("HOME", "/h")])
+            ),
+            Some(PathBuf::from("/h/.local/state/t/usage"))
+        );
+        // a value other than "on" does not opt in
+        assert_eq!(
+            Store::locate("t", env(&[("T_USAGE", "1"), ("HOME", "/h")])),
+            None
+        );
+        // TOOL_USAGE_DIR=off stays off even with TOOL_USAGE=on
+        assert_eq!(
+            Store::locate(
+                "t",
+                env(&[("T_USAGE", "on"), ("T_USAGE_DIR", "off"), ("HOME", "/h")])
+            ),
+            None
+        );
     }
 
     #[test]
