@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-11-15
+
 ### Changed
 
 - `vc_usage` recording is opt-in, off by default: `TOOL_USAGE_DIR=DIR` or `TOOL_USAGE=on` enables it (USAGE-2).

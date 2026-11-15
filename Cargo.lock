@@ -127,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "repo_checks"
-version = "0.0.3"
+version = "0.0.4"
 
 [[package]]
 name = "rustix"
@@ -173,11 +173,11 @@ checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
 
 [[package]]
 name = "vc_build"
-version = "0.0.3"
+version = "0.0.4"
 
 [[package]]
 name = "vc_complete"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "clap",
  "clap_complete",
@@ -186,7 +186,7 @@ dependencies = [
 
 [[package]]
 name = "vc_ui"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "anstyle",
  "anyhow",
@@ -197,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "vc_usage"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "clap",
  "vc_build",
