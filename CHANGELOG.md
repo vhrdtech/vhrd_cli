@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-11-15
+
 ### Added
 
 - `vc_usage`: each run counted per subcommand and flag in a bounded local file, and a report listing the unused parts (USAGE-1).
