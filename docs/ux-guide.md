@@ -1,6 +1,6 @@
 # CLI UX guide: how the vhrdtech command-line tools look and behave
 
-This page is for every command-line tool in the vhrdtech repos: `ww`, `dg`, `gw121`, `saleae`, `m2k`, `mdcheck`, `choreograph`, `solidcraft`, our other internal CLIs, and any new Rust CLI. Read it before building or changing a CLI. The vhrd_cli crates are the shared code that follows it.
+This page is for every command-line tool in the vhrdtech repos: `ww`, `pw`, `gw121`, `saleae`, `m2k`, `mdcheck`, `choreograph`, `solidcraft`, our other internal CLIs, and any new Rust CLI. Read it before building or changing a CLI. The vhrd_cli crates are the shared code that follows it.
 
 It collects what was scattered:
 - the house rules on CLIs, Rust repos and development practice;
@@ -64,19 +64,19 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 - 💡 **Commands are `noun verb`, short and lowercase, the same verbs for every noun.** A noun with one obvious action may be a bare verb.
   - Why: `--help` at each level then reads like a map, and the same verb means the same thing everywhere.
-  - Example: `dg power on`, `dg gpio read 3`; not `update` beside `upgrade`.
-  - [clig "Subcommands"; dg design "Naming"]
+  - Example: `pw power on`, `pw gpio read 3`; not `update` beside `upgrade`.
+  - [clig "Subcommands"; Portwright design "Naming"]
 - 💡 **Flags over positional arguments**, except for the one main thing a command acts on (`cp SRC DST` style).
   - Why: flags are self-describing and complete better: the shell knows which value it is completing.
   - Example: adding a task keeps its id as the one positional argument and the rest (status, title) as flags.
   - [heroku "Flags and args"; clig "Arguments and flags"]
 - 💡 **Standard flag names, standard meanings.** `-h/--help` (only help), `-V/--version`, `-v/--verbose` (repeatable), `-q/--quiet`, `-n/--dry-run`, `-a/--all`, `-o/--output`, `-f/--force`, `--json`, `--color`, `-y/--yes`. A flag means the same in every subcommand of a tool and across the tools.
   - Why: a person guesses a flag without reading help, and two tools with the same flag behave the same.
-  - Example: `-d/--device` selects a device in `dg`; `ww` uses the same idea with its `--serial` and `WW_*` variables.
-  - [clig "Use standard names for flags"; dg design "Global flags"]
+  - Example: `-d/--device` selects a device in `pw`; `ww` uses the same idea with its `--serial` and `WW_*` variables.
+  - [clig "Use standard names for flags"; Portwright design "Global flags"]
 - 💡 **POSIX syntax:** single-letter short options may be grouped (`-qv`), `--` ends the options, `-` as a file name means stdin or stdout, and the order of options does not matter. Global flags work before and after the subcommand.
   - Why: scripts and fingers both expect it, and pressing ↑ then adding a flag at the end must work.
-  - Example: `dg i2c write 0x50 - < data.bin`; `tool search -- -foo` passes a dash-prefixed search term through.
+  - Example: `pw i2c write 0x50 - < data.bin`; `tool search -- -foo` passes a dash-prefixed search term through.
   - [posix Guidelines 5, 10, 11, 13; clig "make arguments, flags and subcommands order-independent"]
 - 💡 **No catch-all subcommand and no prefix abbreviations.** Aliases are explicit and stay stable.
   - Why: once `tool i` means `install`, no command starting with `i` can ever be added.
@@ -88,8 +88,8 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - [clig "Do not read secrets directly from flags"; an internal records tool's REC-70]
 - 📘 **One front end, plugins on `PATH`.** A tool with outside extensions runs `TOOL-NAME` from `PATH` for an unknown `TOOL NAME`, cargo-style, and hands it the resolved context (device selection, output format) as `TOOL_*` environment variables. Plugins show in `TOOL help` and in completion.
   - Why: one thing to install and discover, while pieces ship on their own.
-  - Example: `ww chunky ...` runs `ww-chunky` with `WW_SERIAL=...`; `donguru-vh-scan` runs as `dg vh-scan`.
-  - [wire_weaver `wire_weaver_cli/src/plugin.rs`; dg design "Extensibility"]
+  - Example: `ww chunky ...` runs `ww-chunky` with `WW_SERIAL=...`; `portwright-vh-scan` runs as `pw vh-scan`.
+  - [wire_weaver `wire_weaver_cli/src/plugin.rs`; Portwright design "Extensibility"]
 - 🔒 **Commands register themselves.** A CLI with more than a handful of subcommands lets each command group register itself in its own module (a distributed slice with linkme, or inventory, on clap's builder API), never in one central enum or match that every change edits. A test checks the registered commands against the expected list. Help, completion and usage signals come from the same registry.
   - Why: main.rs changed in 67 % of landings on one internal CLI while the tree was central; one registry also keeps help, completion and usage from drifting apart.
   - Example: one internal CLI's CLI-12: each family's clap enum, dispatch, long-help rows, usage-signal rows and completers live in its own module's `cli`, described by a `cli_slice::Slice`.
@@ -182,8 +182,8 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 
 - 📘 **stdout carries the data asked for; stderr carries diagnostics** (progress, warnings, errors, actions in flight).
   - Why: `tool ... | jq` and an agent reading stdout never see noise.
-  - Example: `dg power meter -f json | jq .current_ma`.
-  - [dg design "Unix-philosophy"; clig "The Basics"; heroku "Stdout/Stderr"]
+  - Example: `pw power meter -f json | jq .current_ma`.
+  - [Portwright design "Unix-philosophy"; clig "The Basics"; heroku "Stdout/Stderr"]
 - 🔒 **Colour for statuses, ids, dates, warnings, errors and `next:` hints, from one set of styles.** It is off when stdout is not a TTY, with `NO_COLOR` set to anything non-empty, or with `--color never`. Rust: `anstream`/`anstyle`, as clap does; no ncurses; the styles and the flag are `vc_ui`'s (`OK`, `ERR`, `ID`, ..., `ColorFlag`, `Paint`). Status emoji stay as they are.
   - Why: colour makes a view scannable; escape codes in a pipe or a log are garbage.
   - Example: one internal CLI's CLI-9: statuses green, yellow or red, ids one colour, dates dim, warnings yellow, errors red.
@@ -202,8 +202,8 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - [an internal CLI's AGENTS.md "Conventions"]
 - 📘 **Every command has a machine-readable form.** JSON goes to stdout as one value; a streaming command writes one JSON object per line.
   - Why: scripts, bots and agents get a stable shape without parsing text.
-  - Example: `gw121 read --json`; `dg gpio watch 3 -f jsonl >> gpio.log`.
-  - [gw121, saleae_rs, m2k AGENTS.md; dg design "Unix-philosophy"; clig "Display output as formatted JSON if --json is passed"]
+  - Example: `gw121 read --json`; `pw gpio watch 3 -f jsonl >> gpio.log`.
+  - [gw121, saleae_rs, m2k AGENTS.md; Portwright design "Unix-philosophy"; clig "Display output as formatted JSON if --json is passed"]
 - 📘 **Output formats are an interface.** Views, log lines and JSON for the bots change on purpose, with a CHANGELOG entry. A JSON contract carries a version field (`v`). Text for people may change freely.
   - Why: the bots, the dashboards and scripts parse it; a silent change breaks them.
   - Example: the records admin binary's plan JSON: `v`, `ok`, exit 0/1/2/78.
@@ -222,7 +222,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 - 📘 **An error is one line on stderr that starts with the tool's name and says what to do** (`vc_ui::error_line`, `vc_ui::finish`).
   - Why: the person reads the fix, not a backtrace; the prefix tells which tool spoke inside a pipeline.
   - Example (the shape): `tool: no task 2618#99 (tool ls PROJECT lists its tasks)`.
-  - [an internal CLI's AGENTS.md "Conventions"; dg design "Errors under json"; clig "Catch errors and rewrite them for humans"]
+  - [an internal CLI's AGENTS.md "Conventions"; Portwright design "Errors under json"; clig "Catch errors and rewrite them for humans"]
 - 📘 **No `unwrap` or `expect` on data from files, the network, a device or the user.** Errors carry context (`anyhow` with `.context(...)` in the CLI, typed errors in the library).
   - [AGENTS.md of several internal CLIs, including typec_dongle and gw121]
 - 📘 **A failed step shows its tail and keeps the rest.** Captured output of a step is shown only on failure (or with `-v`): its last 40 lines, then the path of the whole log in a private file.
@@ -230,14 +230,14 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Example: `... 812 earlier lines, the whole output: $XDG_STATE_HOME/TOOL/step-logs/TIME-NODE-WHAT.log`.
   - [an internal CLI's CLI-11; clig "if there is an error, make sure you print out the logs"]
 - 📘 **Exit codes are a documented contract.** 0 is success, 1 a failure with no more specific category, 2 bad arguments (clap's usage errors). A tool with categories scripts must tell apart documents them in one table and never renumbers one; a new category takes the next free number. A tool's own categories take 3 to 63, below the sysexits range; 75 and 78 keep their sysexits meaning in every tool (next rule). Rust: `vc_ui::Exit`.
-  - Example: `dg`: 3 no device, 4 device error, 5 timeout (`src/exit.rs`).
+  - Example: `pw`: 3 no device, 4 device error, 5 timeout (`src/exit.rs`).
   - [typec_dongle `docs/design/cli/index.md` "Exit codes"; clig "Map the non-zero exit codes to the most important failure modes"]
 - 🔒 **78 means "can't work until someone acts".** A binary that can't run with its config (a bad setting, a database newer than the binary, a missing secret) exits 78 with one plain line, and its unit doesn't retry it. 75 is a temporary failure worth retrying (the deploy drain). Both come from BSD sysexits (`EX_CONFIG`, `EX_TEMPFAIL`).
   - [rule: "Services fail loudly, never in a loop"; sysexits]
 - 📘 **Under a JSON output, an error is one JSON object on one line on stderr,** naming the exit category, its code and the message.
   - Why: a JSONL stream that fails halfway leaves only whole records on stdout, and `| jq` fails on the exit code instead of a surprise object.
   - Example: `{"error":{"exit":"device_error","code":4,"message":"power meter: ..."}}`.
-  - [dg design "Errors under json"]
+  - [Portwright design "Errors under json"]
 
 ## 8. Long runs: progress, deploys and transfers
 
@@ -267,8 +267,8 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Example: adding a task without a release asks at a terminal (Enter = brewing); without one it prints one stderr hint and goes on (TASK-8).
   - [clig "Interactivity"; heroku "Prompting"; an internal CLI's TASK-8]
 - 💡 **Confirm by the size of the danger.** A small local change needs no prompt. A bigger or remote change, or a bulk change that can't be undone, asks `[y/N]` and offers a dry run. A severe one (wiping a server, a prod database) makes the person type the name of the thing, or pass `--confirm NAME` in a script.
-  - Example: `dg header vbus on --allow-voltage 20V` warns and asks above 5.5 V (CLI-16).
-  - [clig "Confirm before doing anything dangerous"; dg design]
+  - Example: `pw header vbus on --allow-voltage 20V` warns and asks above 5.5 V (CLI-16).
+  - [clig "Confirm before doing anything dangerous"; Portwright design]
 - 📘 **`--yes` answers the ordinary prompts, not the prod gate for an agent.** An AI agent session's `--yes` is refused for a ship to a server today; for every prod deploy it is planned (🔜). Instead the tool prints the line to type at a terminal, or files an approval request for a person to act on. A deploy held for a config key this binary does not understand asks a person even with `--yes`.
   - Why: prod waits for a person's OK, and an agent must not give it for them.
   - [an internal CLI's `deploy.rs`, CLI-17; rule: "Asking the person"]
@@ -282,7 +282,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 ## 10. Configuration and environment
 
 - 📘 **Settings come in layers; the later wins per key.** Built-in defaults, then the system file, the user file (XDG: `~/.config/TOOL/`), the project file found by walking up from the current directory, then `TOOL_*` environment variables, then flags. `TOOL config show --origin` says where each value came from.
-  - [dg design "Configuration"; clig "Apply configuration parameters in order of precedence", "Follow the XDG-spec"]
+  - [Portwright design "Configuration"; clig "Apply configuration parameters in order of precedence", "Follow the XDG-spec"]
 - 🔒 **Every tunable is a setting,** declared in the tool's typed settings schema with its default and a doc line. Code holds only the default.
   - Why: a config portal shows and changes it without a form written by hand.
   - [rule: "No hardcoded constants"]
@@ -290,7 +290,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Why: a newer machine's config must not stop an older binary, and a typo must still be caught.
   - [an internal CLI's CLI-13 to CLI-17]
 - 📘 **Device selection follows one order:** the flag, then its environment variable, then the project file, then auto-selection when exactly one device is present. An ambiguous selector is an error that lists the choices.
-  - [dg design "Device selection"; `ww` `DeviceArgs`]
+  - [Portwright design "Device selection"; `ww` `DeviceArgs`]
 
 ## 11. Version, usage and the skill tree
 
@@ -315,7 +315,7 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 - 📘 **Completion:** driven the way readline does, and in real shells in a pty (an internal CLI's CLI-7).
 - 📘 **Colour:** per command family, the plain output has no escape codes, and the coloured output minus its escapes equals the plain output (an internal CLI's CLI-9, `tests/colour.rs`).
 - 📘 **Terminal behaviour:** frames, progress and final lines tested at a real pty at a fixed width (an internal CLI's CLI-11, `tests/frame.rs`).
-- 📘 **Exit codes and JSON:** the built binary runs against fixtures and the test checks the exit code and the JSON shape (mdcheck `tests/check.rs`, dg's exit table).
+- 📘 **Exit codes and JSON:** the built binary runs against fixtures and the test checks the exit code and the JSON shape (mdcheck `tests/check.rs`, pw's exit table).
 - 🔒 **Registry:** a test checks the registered commands against the expected list (section 3).
 
 ## 13. Checklists
