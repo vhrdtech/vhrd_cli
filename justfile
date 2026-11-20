@@ -7,11 +7,7 @@ default:
 # The tests. `just test`: all of them (test-all). `just test --changed`: only the workspace crates changed against
 # main and the crates that depend on them (needs tpm on PATH: `tpm test changed`); without tpm it runs them all.
 test *flags:
-    if [ "{{flags}}" = "--changed" ]; then \
-        if command -v changedtests >/dev/null; then f=$(changedtests) && if [ -n "$f" ]; then cargo nextest run --workspace -E "$f"; fi; \
-        else echo "changedtests not found; running the full test suite instead" >&2; {{just_executable()}} test-all; fi; \
-    elif [ -z "{{flags}}" ]; then {{just_executable()}} test-all; \
-    else echo "just test: unknown {{flags}} (--changed or nothing)" >&2; exit 2; fi
+    {{ if flags == "--changed" { "changedtests run" } else if flags == "" { just_executable() + " test-all" } else { error("just test: unknown " + flags + " (--changed or nothing)") } }}
 
 # Every test through nextest, then the doc tests (nextest doesn't run those)
 test-all:
