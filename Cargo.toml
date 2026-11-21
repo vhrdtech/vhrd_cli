@@ -24,6 +24,7 @@ vc_ui = { path = "vc_ui" }
 # Debug info in .dwo files next to the objects, not packed into every test binary: much quicker rebuilds after a
 # small change. Tests inherit it.
 [profile.dev]
+debug = false
 split-debuginfo = "unpacked"
 
 [profile.release]
