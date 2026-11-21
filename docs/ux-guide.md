@@ -4,7 +4,7 @@ This page is for every command-line tool in the vhrdtech repos: `ww`, `pw`, `gw1
 
 It collects what was scattered:
 - the house rules on CLIs, Rust repos and development practice;
-- the AGENTS.md files of wire_weaver, typec_dongle (with its CLI design, `docs/design/cli/index.md`), gw121, saleae_rs, m2k and mdcheck, and other internal CLIs;
+- the AGENTS.md files of wire_weaver, portwright (with its CLI design, `docs/design/cli/index.md`), gw121, saleae_rs, m2k and mdcheck, and other internal CLIs;
 - an internal CLI's FEATURES.md area `CLI` and the picker (LIB-11);
 - tasks and notes about completion, pickers, help, colour, progress, versions and confirmation;
 - outside practice: clig.dev, the POSIX Utility Syntax Guidelines, the Heroku CLI style guide, no-color.org and BSD sysexits.
@@ -224,14 +224,14 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - Example (the shape): `tool: no task 2618#99 (tool ls PROJECT lists its tasks)`.
   - [an internal CLI's AGENTS.md "Conventions"; Portwright design "Errors under json"; clig "Catch errors and rewrite them for humans"]
 - 📘 **No `unwrap` or `expect` on data from files, the network, a device or the user.** Errors carry context (`anyhow` with `.context(...)` in the CLI, typed errors in the library).
-  - [AGENTS.md of several internal CLIs, including typec_dongle and gw121]
+  - [AGENTS.md of several internal CLIs, including portwright and gw121]
 - 📘 **A failed step shows its tail and keeps the rest.** Captured output of a step is shown only on failure (or with `-v`): its last 40 lines, then the path of the whole log in a private file.
   - Why: the cause is usually at the end; the full log is one command away.
   - Example: `... 812 earlier lines, the whole output: $XDG_STATE_HOME/TOOL/step-logs/TIME-NODE-WHAT.log`.
   - [an internal CLI's CLI-11; clig "if there is an error, make sure you print out the logs"]
 - 📘 **Exit codes are a documented contract.** 0 is success, 1 a failure with no more specific category, 2 bad arguments (clap's usage errors). A tool with categories scripts must tell apart documents them in one table and never renumbers one; a new category takes the next free number. A tool's own categories take 3 to 63, below the sysexits range; 75 and 78 keep their sysexits meaning in every tool (next rule). Rust: `vc_ui::Exit`.
   - Example: `pw`: 3 no device, 4 device error, 5 timeout (`src/exit.rs`).
-  - [typec_dongle `docs/design/cli/index.md` "Exit codes"; clig "Map the non-zero exit codes to the most important failure modes"]
+  - [portwright `docs/design/cli/index.md` "Exit codes"; clig "Map the non-zero exit codes to the most important failure modes"]
 - 🔒 **78 means "can't work until someone acts".** A binary that can't run with its config (a bad setting, a database newer than the binary, a missing secret) exits 78 with one plain line, and its unit doesn't retry it. 75 is a temporary failure worth retrying (the deploy drain). Both come from BSD sysexits (`EX_CONFIG`, `EX_TEMPFAIL`).
   - [rule: "Services fail loudly, never in a loop"; sysexits]
 - 📘 **Under a JSON output, an error is one JSON object on one line on stderr,** naming the exit category, its code and the message.
@@ -344,10 +344,10 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
 - [sysexits] BSD sysexits(3), https://man.freebsd.org/cgi/man.cgi?query=sysexits, read 3 Nov 2026: 64 `EX_USAGE`, 75 `EX_TEMPFAIL`, 78 `EX_CONFIG`.
 - GNU Coding Standards, "Command-Line Interfaces" (https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html): not read for this version, so no point here rests on it. Worth a read for `--help` and `--version` output conventions.
 - [rule: ...] the house rules on CLIs and UIs, Rust repos and development practice, as of 3 Nov 2026.
-- Repos: wire_weaver (`wire_weaver_cli/src/complete.rs`, `plugin.rs`, `untrusted.rs`), typec_dongle (`docs/design/cli/index.md`, `src/exit.rs`, `AGENTS.md`), gw121, saleae_rs, m2k, mdcheck, choreograph, cnt, and our other internal CLIs and their AGENTS.md files.
+- Repos: wire_weaver (`wire_weaver_cli/src/complete.rs`, `plugin.rs`, `untrusted.rs`), portwright (`docs/design/cli/index.md`, `src/exit.rs`, `AGENTS.md`), gw121, saleae_rs, m2k, mdcheck, choreograph, cnt, and our other internal CLIs and their AGENTS.md files.
 
 ## Where the rules point here
 
 - **House rules:** "CLIs are high quality", "CLI quality", "--version shows version, git SHA and commit time", "Nothing is hidden", "Disabled things say why", "Measure the input", "Commands register themselves" and "Large CLIs may record their usage, opt-in" are restated here.
-- **Repo AGENTS.md files:** wire_weaver, typec_dongle, gw121, saleae_rs, m2k, mdcheck, choreograph, cnt, fpga_tools and our other internal CLIs point here for CLI work, as does this repo's [AGENTS.md](../AGENTS.md).
+- **Repo AGENTS.md files:** wire_weaver, portwright, gw121, saleae_rs, m2k, mdcheck, choreograph, cnt, fpga_tools and our other internal CLIs point here for CLI work, as does this repo's [AGENTS.md](../AGENTS.md).
 - **GUI twin:** [vhrd_egui's UX guide](https://github.com/vhrdtech/vhrd_egui/blob/main/docs/ux-guide.md) holds the rules every UI shares (its section 2); section 2 here links to it.

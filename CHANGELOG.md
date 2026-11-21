@@ -4,6 +4,10 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+
+- Docs name the Portwright repo `portwright` (was `typec_dongle`, renamed).
+
 ## [0.0.4] - 2026-11-15
 
 ### Changed
