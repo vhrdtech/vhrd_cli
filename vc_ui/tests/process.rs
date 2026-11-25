@@ -59,7 +59,7 @@ fn child_cmd(mode: &str) -> Command {
     cmd
 }
 
-/// Starts the child, reads some of its stdout, closes the pipe and waits for it to end.
+/// Starts the child, reads its stdout up to its first line, closes the pipe and waits for it to end.
 fn read_then_close(mode: &str) -> std::process::ExitStatus {
     let mut child = child_cmd(mode)
         .stdout(Stdio::piped())
@@ -70,11 +70,21 @@ fn read_then_close(mode: &str) -> std::process::ExitStatus {
         .stdout
         .take()
         .unwrap_or_else(|| panic!("no stdout pipe"));
+    // until the child's own line: the test harness writes a header first, and a pipe closed after only that
+    // would fail the harness's next write instead of the child's
+    let mut seen = Vec::new();
     let mut buf = [0u8; 4096];
-    let n = stdout
-        .read(&mut buf)
-        .unwrap_or_else(|e| panic!("reading the child: {e}"));
-    assert!(n > 0);
+    while !String::from_utf8_lossy(&seen).contains("a line of output") {
+        let n = stdout
+            .read(&mut buf)
+            .unwrap_or_else(|e| panic!("reading the child: {e}"));
+        assert!(
+            n > 0,
+            "the child ended before its output: {}",
+            String::from_utf8_lossy(&seen)
+        );
+        seen.extend_from_slice(&buf[..n]);
+    }
     drop(stdout);
     child
         .wait()
