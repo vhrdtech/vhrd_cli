@@ -11,6 +11,7 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 ### Fixed
 
 - zsh and fish complete a word typed with an open quote, such as `'alpha t` (COMP-1).
+- fish puts a picked value on the line without its help text (COMP-1).
 
 ## [0.0.4] - 2026-11-15
 

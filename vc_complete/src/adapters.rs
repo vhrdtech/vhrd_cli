@@ -302,7 +302,7 @@ impl EnvCompleter for Fish {
         let script = r#"function __vc_complete_NAME
     set -l out (VAR=fish COMPLETER -- (commandline --current-process --tokenize --cut-at-cursor) (commandline --current-token) 2>/dev/null)
     if test (count $out) -eq 1; and string match -q -- \x1f'*' $out[1]
-        commandline --current-token --replace -- (string escape -- (string sub --start 2 -- $out[1]))
+        commandline --current-token --replace -- (string escape -- (string sub --start 2 -- (string split --fields 1 \t -- $out[1])))
         commandline -f repaint
         return
     end
