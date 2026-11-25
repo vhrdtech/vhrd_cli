@@ -91,12 +91,66 @@ impl Shell {
     }
 }
 
+/// A key that a [`Block`] binds to a CLI's pick widget ([`crate::Completion::pick_widget`]).
+///
+/// ```
+/// use vc_complete::rc::{Key, Shell};
+/// assert_eq!(Key::Alt('d').notation(Shell::Bash), r"\ed");
+/// assert_eq!(Key::Ctrl('t').notation(Shell::Zsh), "^T");
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Key {
+    /// Alt (Meta) with a letter: `Key::Alt('d')` is Alt+D.
+    Alt(char),
+    /// Ctrl with a letter.
+    Ctrl(char),
+}
+
+impl Key {
+    /// The key as the shell's binding command writes it: bash `\ed` and `\C-t`, zsh `^[d` and `^T`, fish `\ed`
+    /// and `\ct`.
+    pub fn notation(self, shell: Shell) -> String {
+        match (self, shell) {
+            (Key::Alt(c), Shell::Zsh) => format!("^[{c}"),
+            (Key::Alt(c), _) => format!("\\e{c}"),
+            (Key::Ctrl(c), Shell::Bash) => format!("\\C-{c}"),
+            (Key::Ctrl(c), Shell::Zsh) => format!("^{}", c.to_ascii_uppercase()),
+            (Key::Ctrl(c), Shell::Fish) => format!("\\c{c}"),
+        }
+    }
+
+    fn letter(self) -> char {
+        match self {
+            Key::Alt(c) | Key::Ctrl(c) => c,
+        }
+    }
+
+    /// The line that binds this key to `cli`'s pick widget, only in an interactive shell and only where the
+    /// registration defined the widget.
+    fn line(self, shell: Shell, cli: &str) -> String {
+        let id = crate::ident(cli);
+        let key = self.notation(shell);
+        match shell {
+            Shell::Bash => format!(
+                "[[ $- == *i* ]] && declare -F _vc_pick_{id} >/dev/null && bind -x '\"{key}\": _vc_pick_{id}'"
+            ),
+            Shell::Zsh => {
+                format!("(( $+functions[_vc_pick_{id}] )) && bindkey '{key}' _vc_pick_{id}")
+            }
+            Shell::Fish => format!(
+                "status is-interactive; and functions -q __vc_pick_{id}; and bind {key} __vc_pick_{id}"
+            ),
+        }
+    }
+}
+
 /// The marked block: its name (in the marker lines), the CLIs it registers, and who manages it.
 #[derive(Clone, Debug)]
 pub struct Block<'a> {
     name: &'a str,
     clis: &'a [&'a str],
     managed_by: &'a str,
+    keys: Vec<(&'a str, Key)>,
 }
 
 impl<'a> Block<'a> {
@@ -112,7 +166,34 @@ impl<'a> Block<'a> {
             name,
             clis,
             managed_by: name,
+            keys: Vec::new(),
         }
+    }
+
+    /// Binds `key` to the pick widget of `cli` ([`crate::Completion::pick_widget`]), on the line after its
+    /// registration. The binding is a setting of the block, so it is written with the block and kept when the block
+    /// is rewritten; a CLI without the widget gets no binding.
+    ///
+    /// ```
+    /// use vc_complete::rc::{Block, Key, Shell};
+    /// let b = Block::new("mytools", &["mycli"]).pick_key("mycli", Key::Alt('d'));
+    /// assert!(b.text(Shell::Zsh).contains("bindkey '^[d' _vc_pick_mycli"));
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// When `cli` is not one of the block's CLIs, or the key's character is not an ASCII lowercase letter.
+    pub fn pick_key(mut self, cli: &'a str, key: Key) -> Self {
+        assert!(
+            self.clis.contains(&cli),
+            "pick_key: {cli} is not in the block"
+        );
+        assert!(
+            key.letter().is_ascii_lowercase(),
+            "pick_key: {key:?} needs a lowercase letter"
+        );
+        self.keys.push((cli, key));
+        self
     }
 
     /// The program named in the first marker line as the one that writes the block (the name by default), so a
@@ -154,6 +235,10 @@ impl<'a> Block<'a> {
         for cli in self.clis {
             s.push_str(&shell.line(cli));
             s.push('\n');
+            for (_, key) in self.keys.iter().filter(|(c, _)| c == cli) {
+                s.push_str(&key.line(shell, cli));
+                s.push('\n');
+            }
         }
         s.push_str(&format!("{} <<<\n", self.end_prefix()));
         s
@@ -390,6 +475,45 @@ mod tests {
     fn fish_uses_its_own_syntax() {
         let new = block().update("", Shell::Fish).unwrap();
         assert!(new.contains("type -q todo; and COMPLETE=fish todo | source\n"));
+    }
+
+    #[test]
+    fn a_pick_key_follows_its_cli_in_every_shell() {
+        let b = block().pick_key("ww", Key::Alt('d'));
+        let bash = b.text(Shell::Bash);
+        assert!(
+            bash.contains("source <(COMPLETE=bash ww)\n[[ $- == *i* ]] && declare -F _vc_pick_ww >/dev/null && bind -x '\"\\ed\": _vc_pick_ww'\n"),
+            "{bash}"
+        );
+        assert!(!bash.contains("_vc_pick_todo"), "only the CLI with the key");
+        let zsh = b.text(Shell::Zsh);
+        assert!(
+            zsh.contains("(( $+functions[_vc_pick_ww] )) && bindkey '^[d' _vc_pick_ww\n"),
+            "{zsh}"
+        );
+        let fish = b.text(Shell::Fish);
+        assert!(
+            fish.contains(
+                "status is-interactive; and functions -q __vc_pick_ww; and bind \\ed __vc_pick_ww\n"
+            ),
+            "{fish}"
+        );
+        let without = block().update("", Shell::Bash).unwrap();
+        let with = b.update(&without, Shell::Bash).unwrap();
+        assert_eq!(
+            with.matches("# >>> todo").count(),
+            1,
+            "the key rewrites the block in place"
+        );
+        assert_eq!(b.update(&with, Shell::Bash), None, "and only once");
+        assert_eq!(Key::Ctrl('t').notation(Shell::Bash), "\\C-t");
+        assert_eq!(Key::Ctrl('t').notation(Shell::Fish), "\\ct");
+    }
+
+    #[test]
+    #[should_panic(expected = "not in the block")]
+    fn a_pick_key_needs_a_cli_of_the_block() {
+        let _ = block().pick_key("other", Key::Alt('d'));
     }
 
     #[test]

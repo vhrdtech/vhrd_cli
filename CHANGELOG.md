@@ -4,9 +4,16 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- `vc_picker`: a fuzzy picker below the prompt with columns, fzf syntax and highlighted matches; `vc_picker::tab` opens it from a completer (PICK-1).
+- `vc_complete::tab_picker` and `TOOL_TAB_PICKER=0`: where Tab may open a picker (PICK-1).
+- `vc_complete::Completion::pick_widget` and `rc::Block::pick_key`: a key such as Alt+D opens the picker, set in the rc block (PICK-1).
+
 ### Changed
 
 - Docs name the Portwright repo `portwright` (was `typec_dongle`, renamed).
+- **Breaking:** `vc_complete::complete_with` is gone; `Completion::new(cli).extra(f).complete()` takes its place (PICK-1).
 
 ### Fixed
 

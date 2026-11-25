@@ -156,26 +156,30 @@ The rules every UI shares live once, in [vhrd_egui's UX guide, section 2](https:
   - [an internal CLI's CLI-7]
 - 📘 **One shared adapter crate** instead of copies of `ww`'s bash adapter: `vc_complete` in this repo, with one call at the top of `main` (`vc_complete::complete(cli)`), live values through `vc_complete::values`, and `vc_complete::rc` for the block in the shell's config. A CLI that still carries a copy says where it came from and moves to the crate when touched.
 
-### 5.1 Built: the picker on Tab (LIB-11)
+### 5.1 The picker on Tab (`vc_picker`)
 
 - 📘 **When a value has several hits, Tab opens a picker instead of a bare list.** It is drawn inline below the prompt on `/dev/tty` (like fzf `--height`, about 60 % of the terminal, not the alternate screen), so it works inside a completion function or a key binding. Rows have clear columns and a header, the matched letters are lit, a bottom line shows the details of the selected row.
-  - Keys: type to filter, Up/Down, Ctrl-P/N, Tab, PgUp/PgDn, Enter takes it, Esc/Ctrl-C/Ctrl-G cancels.
+  - Keys: type to filter, Up/Down, Ctrl-P/N, Tab, PgUp/PgDn, Home/End; Enter takes the row; Ctrl-Y or Alt-Enter takes its other form where the tool has one (a full path instead of a name); Esc/Ctrl-C/Ctrl-G cancels and leaves the line as it was.
   - Matching: the tool's own ranking first, then fuzzy matching with fzf syntax (`'exact`, `^start`, `end$`, `!not`).
-  - Where it can't run (no terminal) or with `TOOL_TAB_PICKER=0`, plain candidates come back.
-  - Colour follows section 6.
-  - The UI is generic (`vc_picker`-style: `Column`, `Item`, `Source`), so other CLIs can reuse it.
-  - [an internal CLI's LIB-11, its picker module]
+  - The pick replaces the word being completed; the words before it stay.
+  - Where it can't run (no terminal, a shell other than bash, zsh or fish) or with `TOOL_TAB_PICKER=0`, plain candidates come back.
+  - Colour follows section 6: the CLI's `--color` choice, off with `NO_COLOR`.
+  - Example: `mytool open widget<TAB>` with three documents opens the picker with `widget` as the query; ` rev2` and Enter put `widget-ds100-rev2.txt` on the line.
+  - The code: `vc_picker` (`Column`, `Item`, `Source`, `run`), and `vc_picker::tab` inside a completer; the example CLI `pickdemo` shows it.
 
-### 5.2 🔜 Planned, not built yet: the picker for every CLI and value
+### 5.2 The picker for every CLI and value
 
-- **Completion shows Alt+D-style results whenever a value has several hits**, not only for documents: several devices, several tasks, several sessions. The picker has clear columns (for a device: serial, product, label, port) instead of a bare list.
+- 📘 **Completion opens the picker whenever a value has several hits**, not only for documents: several devices, several tasks, several sessions. The picker has clear columns (for a device: serial, product, label, port) instead of a bare list.
   - Why: a list of serial numbers says nothing about which board is which.
   - Example: `ww --serial <TAB>` with three boards opens a picker with serial, product, label and USB path columns.
+  - A completer gets it by calling `vc_picker::tab` with its own columns when it has more than one hit; a CLI adds it to such a completer when touched.
 
-### 5.3 🔜 Planned, not built yet: the Alt+D picker as a setting
+### 5.3 The Alt+D picker as a setting
 
-- **Alt+D is a setting that the provisioning step writes into its `~/.bashrc` completion block**, not an environment variable a person sets by hand.
-  - Why: the block is rewritten, so a line put inside it by hand is lost. Today the enabling variable must come before the completion script is sourced, so the PC setup puts it above the block.
+- 📘 **A key opens the picker from the prompt, and the key is a setting of the completion block** in the shell's config, written by the tool's setup step, not an environment variable set by hand.
+  - On an empty line the line becomes the command and the pick (`mytool open PICK`); on a line with text the pick goes in at the cursor, quoted for the shell. Esc changes nothing.
+  - The CLI registers the widget with its completion (`vc_complete::Completion::pick_widget`: the subcommand that picks and prints, and the words before the pick); the setup step binds a key to it in the block (`vc_complete::rc::Block::pick_key`, `Key::Alt('d')`). Without the setting no key is bound.
+  - Why: the block is rewritten, so a line put inside it by hand is lost, and a variable had to come before the block to take effect.
   - [rule: "Settings on a PC are provisioned, never written by hand"]
 
 ## 6. Output

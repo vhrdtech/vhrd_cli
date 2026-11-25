@@ -132,6 +132,18 @@ pub fn clean(bin: &Path, dir: &Scratch) -> Command {
     c
 }
 
+/// `c` started in a session of its own, without a controlling terminal: `/dev/tty` cannot be opened in it.
+pub fn without_terminal(c: &mut Command) -> &mut Command {
+    // SAFETY: only a raw syscall between fork and exec
+    unsafe {
+        use std::os::unix::process::CommandExt;
+        c.pre_exec(|| {
+            rustix::process::setsid()?;
+            Ok(())
+        })
+    }
+}
+
 /// A program on PATH, or `None` with a line on stderr saying what is not tried.
 pub fn which(name: &str) -> Option<PathBuf> {
     let path = std::env::var_os("PATH")?;
@@ -139,6 +151,7 @@ pub fn which(name: &str) -> Option<PathBuf> {
         .map(|d| d.join(name))
         .find(|p| p.is_file());
     if found.is_none() {
+        // spirit-level: allow(print-in-library) the test harness says which shell a test skips
         eprintln!("skipped: {name} missing, not on PATH");
     }
     found
@@ -154,6 +167,7 @@ pub fn shell(name: &str) -> Option<PathBuf> {
             .output()
             .is_ok_and(|o| o.status.success() && o.stderr.is_empty());
         if !ok {
+            // spirit-level: allow(print-in-library) the test harness says which shell a test skips
             eprintln!(
                 "skipped: zsh's compinit missing ({} has no completion functions in its fpath or FPATH)",
                 p.display()

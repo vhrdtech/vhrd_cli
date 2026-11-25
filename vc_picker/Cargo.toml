@@ -1,0 +1,28 @@
+[package]
+name = "vc_picker"
+description = "A fuzzy picker drawn below the shell prompt, for Tab completion and key bindings of Rust CLIs: columns, fzf syntax, highlighted matches"
+keywords = ["cli", "picker", "fuzzy", "completion", "terminal"]
+categories = ["command-line-interface"]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+clap_complete.workspace = true
+crossterm = { workspace = true, features = ["events"] }
+nucleo-matcher = { workspace = true, features = [
+  "unicode-casefold",
+  "unicode-normalization",
+  "unicode-segmentation",
+] }
+ratatui = { workspace = true, features = ["crossterm"] }
+rustix = { workspace = true, features = ["event", "std"] }
+unicode-width.workspace = true
+vc_complete.workspace = true
+vc_ui.workspace = true
+
+[dev-dependencies]
+clap = { workspace = true, features = ["error-context", "help", "usage"] }
+vc_test.workspace = true

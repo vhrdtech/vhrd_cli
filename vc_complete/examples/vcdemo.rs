@@ -50,6 +50,15 @@ fn which_shell(_typed: &OsStr) -> Vec<CompletionCandidate> {
     )]
 }
 
+/// Whether Tab may open a picker here, as the one candidate: `on` or `off`.
+fn tab_picker(_typed: &OsStr) -> Vec<CompletionCandidate> {
+    let on = vc_complete::tab_picker("vcdemo");
+    vec![vc_complete::cand(
+        if on { "on" } else { "off" },
+        "the picker on Tab",
+    )]
+}
+
 fn value(name: &'static str, completer: ArgValueCompleter) -> Arg {
     Arg::new(name).action(ArgAction::Append).add(completer)
 }
@@ -99,6 +108,11 @@ fn cli() -> Command {
             Command::new("shell")
                 .about("Completes the name of the shell asking")
                 .arg(value("name", ArgValueCompleter::new(which_shell))),
+        )
+        .subcommand(
+            Command::new("tabpick")
+                .about("Completes whether Tab may open a picker")
+                .arg(value("on", ArgValueCompleter::new(tab_picker))),
         )
 }
 

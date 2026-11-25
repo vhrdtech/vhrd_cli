@@ -9,7 +9,7 @@ Small shared crates for Rust command-line tools, and the guide they follow: the 
   - `vc_complete`: bash, zsh and fish completion with live values and help texts, on clap's dynamic completion.
   - `vc_usage`: each run counted per subcommand and flag in a small local file, and a report that names the parts nobody uses.
   - planned: `vc_cmd`, `vc_steps`: commands that register themselves, steps with progress, tables and deploy summaries.
-  - planned: `vc_picker`: the picker on Tab when a value has several hits.
+  - `vc_picker`: a fuzzy picker below the prompt, opened by Tab when a value has several hits or by a key such as Alt+D.
   - planned: `vc_template`: a small CLI that shows every piece.
 
 A CLI takes them as git dependencies on the default branch, with no tag or rev: `vc_ui = { git = "https://github.com/vhrdtech/vhrd_cli" }`. Its Cargo.lock fixes the version.

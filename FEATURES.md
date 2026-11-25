@@ -24,7 +24,9 @@ This file is the single source of truth for what vhrd_cli does, what is broken a
 - `vc_ui`: colour, the error line, exit codes, safe printing (UI-1).
 - `vc_complete`: shell completion and the rc block (COMP-1, COMP-2).
 - `vc_usage`: usage records per subcommand and flag, and their report (USAGE-1).
+- `vc_picker`: the fuzzy picker below the prompt, on Tab and on a key (PICK-1).
 - `repo_checks` (not published): the repo-wide tests.
+- `vc_test` (not published): the test harness the crates' tests share.
 
 The other `vc_*` crates are planned under their areas below.
 
@@ -46,7 +48,7 @@ The other `vc_*` crates are planned under their areas below.
 
 ## COMP: shell completion
 
-- ✅ **COMP-1 vc-complete**: `vc_complete`, bash, zsh and fish completion with live values and help texts on clap_complete's dynamic completion (guide section 5). One call at the top of `main` (`complete`, `complete_with` for extra registration lines such as a key binding); the quoting bash adapter with `@`, `:` and `=` word breaks and no file-name fallback, zsh with a menu for candidates that replace the word, fish with the picked-candidate mark (`vc_complete/src/adapters.rs`); candidate helpers `cand`, `filtered`, `values`, the line helpers `split_line`, `CurrentWord`, `comp_words`, `word_after` (`src/lib.rs`, `src/line.rs`). An error or a panic in a completer gives no candidates and nothing on stderr. Tests: `tests/protocol.rs` (bash as readline drives it, the zsh and fish answers), `tests/shells.rs` (TAB in bash, zsh and fish in a pty, a missing shell skipped with a line), driving the example CLI `examples/vcdemo.rs`. v0.1.
+- ✅ **COMP-1 vc-complete**: `vc_complete`, bash, zsh and fish completion with live values and help texts on clap_complete's dynamic completion (guide section 5). One call at the top of `main` (`complete`, or `Completion` for extra registration lines and the pick widget); the quoting bash adapter with `@`, `:` and `=` word breaks and no file-name fallback, zsh with a menu for candidates that replace the word, fish with the picked-candidate mark (`vc_complete/src/adapters.rs`); candidate helpers `cand`, `filtered`, `values`, the line helpers `split_line`, `CurrentWord`, `comp_words`, `word_after` (`src/lib.rs`, `src/line.rs`). An error or a panic in a completer gives no candidates and nothing on stderr. Tests: `tests/it/protocol.rs` (bash as readline drives it, the zsh and fish answers), `tests/it/shells.rs` (TAB in bash, zsh and fish in a pty, a missing shell skipped with a line), driving the example CLI `examples/vcdemo.rs`. v0.1.
 - ✅ **COMP-2 rc-block**: `vc_complete::rc`, the marked completion block in `~/.bashrc`, `~/.zshrc` and fish's `config.fish` for a list of CLIs given by the caller, each sourced only where it is installed: added once, replaced in place when it differs, the hand-written `source <(COMPLETE=...)` lines it replaces taken out, a backup of the old file, and no line lost when the end marker is missing (`vc_complete/src/rc.rs`). v0.1.
 
 ## CMD: the command registry
@@ -68,7 +70,8 @@ The other `vc_*` crates are planned under their areas below.
 
 ## PICK: the picker
 
-- 📋 **PICK-1 vc-picker**: `vc_picker`, the inline picker on Tab when a value has several hits, the Alt+D binding as a setting in the rc block, and the help lookup over every command (guide sections 4.1, 5.1 to 5.3). v0.3.
+- ✅ **PICK-1 vc-picker**: [`vc_picker`](vc_picker/src/lib.rs), the fuzzy picker drawn below the prompt on `/dev/tty` (guide sections 5.1 to 5.3): columns with a header that fit the terminal, the caller's own ranking (`Source`) then fuzzy matching with fzf's syntax, matched letters lit, a bottom line, Enter / Ctrl-Y / Esc (`state.rs`, `layout.rs`, `draw.rs`, `term.rs`). `vc_picker::tab` opens it from a completer with several hits and gives the pick as the one candidate; `vc_complete::tab_picker` says where it may run (bash, zsh, fish, not with `TOOL_TAB_PICKER=0`). The key: `vc_complete::Completion::pick_widget` registers the widget, `rc::Block::pick_key` binds it in the block (`Key::Alt('d')`). Tests: unit tests per module; `vc_picker/tests/it` drives the example CLI `pickdemo` in bash, zsh and fish in a pty (Tab, Ctrl-Y, Esc, `TOOL_TAB_PICKER=0`, Alt+D on and off). v0.3.
+- 📋 **PICK-3 help-lookup**: the help lookup over every command, flag and help text on the picker (guide section 4.1). Waits on CMD-1.
 
 ## Dropped and superseded
 

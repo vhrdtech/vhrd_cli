@@ -144,6 +144,23 @@ fn ask(shell: &str, args: &[&str], env: &[(&str, &str)]) -> String {
 }
 
 #[test]
+fn tab_picker_is_on_in_the_three_shells_unless_turned_off() {
+    let zsh = [("_CLAP_COMPLETE_INDEX", "2"), ("_CLAP_IFS", "\n")];
+    assert_eq!(
+        ask("zsh", &["vcdemo", "tabpick", "o"], &zsh),
+        "on:the picker on Tab"
+    );
+    assert_eq!(
+        ask("fish", &["vcdemo", "tabpick", "o"], &[]),
+        "on\tthe picker on Tab\n"
+    );
+    let bash = [("_VC_COMP_LINE", "vcdemo tabpick o"), ("_CLAP_IFS", "\n")];
+    assert_eq!(ask("bash", &["o"], &bash), "on");
+    let off = [bash[0], bash[1], ("VCDEMO_TAB_PICKER", "0")];
+    assert_eq!(ask("bash", &["o"], &off), "off");
+}
+
+#[test]
 fn zsh_and_fish_words_lose_their_quotes() {
     let index = [("_CLAP_COMPLETE_INDEX", "2"), ("_CLAP_IFS", "\n")];
     assert_eq!(
@@ -242,7 +259,11 @@ fn registrations_name_the_binary_and_the_function() {
             assert!(script.contains(want), "{shell}: no {want:?} in\n{script}");
         }
         assert!(!script.contains("bashdefault"), "{shell}");
-        for placeholder in ["NAME", "COMPLETER", "EXTRA", "VAR="] {
+        assert!(
+            !script.contains("_vc_pick"),
+            "{shell}: no pick widget unless asked"
+        );
+        for placeholder in ["NAME", "COMPLETER", "EXTRA", "VAR=", "BINID", "PICK_"] {
             assert!(
                 !script.contains(placeholder),
                 "{shell}: {placeholder} left in\n{script}"

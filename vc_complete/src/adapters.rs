@@ -1,7 +1,7 @@
 //! The shell adapters: what each shell's registration script looks like, and how the binary answers it.
 
 use crate::line::{LINE_VAR, WORDBREAKS_VAR, quote, split_line};
-use crate::{PICKED, SHELL, extra};
+use crate::{PICKED, SHELL, extra, ident, pick_words};
 use clap::Command;
 use clap_complete::CompletionCandidate;
 use clap_complete::env::EnvCompleter;
@@ -28,15 +28,34 @@ fn candidates(
 }
 
 /// The registration script with its placeholders filled in, in one pass, so a path holding `BIN` or `VAR` stays
-/// as it is. `EXTRA` goes in first, so the extra lines get their placeholders filled too.
-fn fill(script: &str, shell: &str, var: &str, name: &str, bin: &str, completer: &str) -> String {
-    let script = script.replace("EXTRA", extra(shell));
+/// as it is. `EXTRA` goes in first, so the extra lines get their placeholders filled too. `bin` is the CLI's name
+/// as the shell calls it; `quoted_bin` and `completer` are quoted for the shell already.
+fn fill(
+    script: &str,
+    shell: &str,
+    var: &str,
+    name: &str,
+    bin: &str,
+    quoted_bin: &str,
+    completer: &str,
+) -> String {
+    let script = script.replace("EXTRA", &extra(shell));
     let name = name.replace('-', "_");
+    let id = ident(bin);
+    let (run, line) = pick_words();
+    let line = if line.is_empty() {
+        String::new()
+    } else {
+        format!("{line} ")
+    };
     let tokens = [
         ("NAME", name.as_str()),
         ("COMPLETER", completer),
-        ("BIN", bin),
+        ("BINID", id.as_str()),
+        ("BIN", quoted_bin),
         ("VAR", var),
+        ("PICK_RUN", run),
+        ("PICK_LINE", line.as_str()),
     ];
     let mut out = String::with_capacity(script.len());
     let mut rest = script.as_str();
@@ -52,6 +71,55 @@ fn fill(script: &str, shell: &str, var: &str, name: &str, bin: &str, completer: 
     }
     out
 }
+
+/// The pick widget of [`crate::Completion::pick_widget`] for one shell: a function that runs the CLI's picker
+/// and puts the pick on the line, `BIN PICK_LINE` before it when the line is empty.
+pub(crate) fn pick_widget(shell: &str) -> &'static str {
+    match shell {
+        "bash" => BASH_PICK,
+        "zsh" => ZSH_PICK,
+        "fish" => FISH_PICK,
+        _ => "",
+    }
+}
+
+const BASH_PICK: &str = r#"_vc_pick_BINID() {
+    local v
+    v=$('COMPLETER' PICK_RUN 2>/dev/null) || return 0
+    printf -v v %q "$v"
+    if [[ -z ${READLINE_LINE// } ]]; then
+        READLINE_LINE="BIN PICK_LINE$v"
+        READLINE_POINT=${#READLINE_LINE}
+    else
+        READLINE_LINE="${READLINE_LINE:0:READLINE_POINT}$v${READLINE_LINE:READLINE_POINT}"
+        READLINE_POINT=$((READLINE_POINT + ${#v}))
+    fi
+}"#;
+
+const ZSH_PICK: &str = r#"function _vc_pick_BINID() {
+    local v
+    v=$(COMPLETER PICK_RUN 2>/dev/null </dev/tty) || { zle redisplay; return 0 }
+    if [[ -z ${BUFFER// } ]]; then
+        BUFFER="BIN PICK_LINE${(q)v}"
+        CURSOR=$#BUFFER
+    else
+        LBUFFER+="${(q)v}"
+    fi
+    zle redisplay
+}
+zle -N _vc_pick_BINID"#;
+
+const FISH_PICK: &str = r#"function __vc_pick_BINID
+    set -l v (COMPLETER PICK_RUN 2>/dev/null)
+    if test $status -eq 0
+        if string match -qr '^\s*$' -- (commandline)
+            commandline --replace -- "BIN PICK_LINE"(string escape -- $v)
+        else
+            commandline --insert -- (string escape -- $v)
+        end
+    end
+    commandline -f repaint
+end"#;
 
 /// A word as zsh and fish pass it, quotes and escapes still on (`'alpha t`), as the value it stands for
 /// (`alpha t`): the completers match values, not shell syntax.
@@ -128,7 +196,7 @@ EXTRA"#
         writeln!(
             buf,
             "{}",
-            fill(&script, "bash", var, name, &quote(bin), &completer)
+            fill(&script, "bash", var, name, bin, &quote(bin), &completer)
         )
     }
 
@@ -236,7 +304,15 @@ EXTRA"#;
         writeln!(
             buf,
             "{}",
-            fill(script, "zsh", var, name, &quote(bin), &quote(completer))
+            fill(
+                script,
+                "zsh",
+                var,
+                name,
+                bin,
+                &quote(bin),
+                &quote(completer)
+            )
         )
     }
 
@@ -313,7 +389,15 @@ EXTRA"#;
         writeln!(
             buf,
             "{}",
-            fill(script, "fish", var, name, &quote(bin), &quote(completer))
+            fill(
+                script,
+                "fish",
+                var,
+                name,
+                bin,
+                &quote(bin),
+                &quote(completer)
+            )
         )
     }
 

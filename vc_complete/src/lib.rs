@@ -55,55 +55,146 @@ use std::sync::OnceLock;
 /// ```
 /// fn extra(shell: &str) -> &'static str {
 ///     match shell {
-///         "bash" => r#"bind -x '"\ed": BIN pick'"#,
+///         "bash" => "alias BIN-help='COMPLETER --help'",
 ///         _ => "",
 ///     }
 /// }
-/// vc_complete::complete_with(|| clap::Command::new("mycli"), extra);
+/// vc_complete::Completion::new(|| clap::Command::new("mycli")).extra(extra).complete();
 /// ```
 pub type Extra = fn(shell: &str) -> &'static str;
 
 /// Answers a shell completion request (`COMPLETE=<shell>` in the environment) and exits; without one it returns
-/// and `main` goes on. Call it first thing in `main`.
+/// and `main` goes on. Call it first thing in `main`. [`Completion`] adds a pick widget or extra lines.
 ///
 /// ```no_run
 /// vc_complete::complete(|| clap::Command::new("mycli"));
 /// ```
 pub fn complete(factory: fn() -> Command) {
-    run(factory, None)
+    Completion::new(factory).complete();
 }
 
-/// [`complete`] with extra lines in the registration, such as a key binding.
+/// The completion of one CLI, with what its registration adds: a pick widget for a key binding, extra lines.
 ///
 /// ```no_run
-/// vc_complete::complete_with(|| clap::Command::new("mycli"), |_shell| "");
+/// vc_complete::Completion::new(|| clap::Command::new("mycli"))
+///     .pick_widget("pick --print", "open")
+///     .complete();
 /// ```
-pub fn complete_with(factory: fn() -> Command, extra: Extra) {
-    run(factory, Some(extra))
+#[derive(Clone, Copy, Debug)]
+pub struct Completion {
+    factory: fn() -> Command,
+    setup: Setup,
 }
 
-fn run(factory: fn() -> Command, extra: Option<Extra>) {
-    let _ = EXTRA.set(extra);
-    CompleteEnv::with_factory(factory)
-        .shells(Shells(&[
-            &adapters::Bash,
-            &Elvish,
-            &adapters::Fish,
-            &Powershell,
-            &adapters::Zsh,
-        ]))
-        .complete();
+/// What the registration adds, kept for the one completion request a process answers.
+#[derive(Clone, Copy, Debug, Default)]
+struct Setup {
+    extra: Option<Extra>,
+    pick: Option<(&'static str, &'static str)>,
 }
 
-static EXTRA: OnceLock<Option<Extra>> = OnceLock::new();
+impl Completion {
+    /// The completion of the CLI that `factory` builds.
+    pub fn new(factory: fn() -> Command) -> Self {
+        Self {
+            factory,
+            setup: Setup::default(),
+        }
+    }
 
-fn extra(shell: &str) -> &'static str {
-    EXTRA
-        .get()
-        .copied()
-        .flatten()
-        .map(|f| f(shell))
-        .unwrap_or("")
+    /// Extra lines in the registration, after the completion function.
+    pub fn extra(mut self, extra: Extra) -> Self {
+        self.setup.extra = Some(extra);
+        self
+    }
+
+    /// A pick widget in the registration: a shell function that runs the CLI with the words `run` (a subcommand that
+    /// opens a picker and prints the pick, exit status 0; anything else leaves the line alone) and puts the pick on
+    /// the line. On an empty line the line becomes the CLI, the words `line` and the pick (`mycli open PICK`), else
+    /// the pick goes in at the cursor, quoted for the shell. The function is `_vc_pick_<bin>` in bash and zsh (a zle
+    /// widget there) and `__vc_pick_<bin>` in fish; a key is bound to it in the shell's config by
+    /// [`rc::Block::pick_key`].
+    ///
+    /// # Panics
+    ///
+    /// When `run` or `line` holds anything but letters, digits, spaces and `-_.=`: they go into the shell
+    /// function as words.
+    pub fn pick_widget(mut self, run: &'static str, line: &'static str) -> Self {
+        let plain = |s: &str| {
+            s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || " -_.=".contains(c))
+        };
+        assert!(plain(run), "pick_widget: run {run:?} must be plain words");
+        assert!(
+            plain(line),
+            "pick_widget: line {line:?} must be plain words"
+        );
+        self.setup.pick = Some((run, line));
+        self
+    }
+
+    /// Answers a shell completion request and exits; without one it returns.
+    pub fn complete(self) {
+        SETUP.get_or_init(|| self.setup);
+        CompleteEnv::with_factory(self.factory)
+            .shells(Shells(&[
+                &adapters::Bash,
+                &Elvish,
+                &adapters::Fish,
+                &Powershell,
+                &adapters::Zsh,
+            ]))
+            .complete();
+    }
+}
+
+static SETUP: OnceLock<Setup> = OnceLock::new();
+
+/// The extra lines of the registration for `shell`: the pick widget, then the caller's own.
+fn extra(shell: &str) -> String {
+    let setup = SETUP.get().copied().unwrap_or_default();
+    let mut out = String::new();
+    if setup.pick.is_some() {
+        out.push_str(adapters::pick_widget(shell));
+        out.push('\n');
+    }
+    if let Some(f) = setup.extra {
+        out.push_str(f(shell));
+    }
+    out
+}
+
+/// The pick widget's words: what runs the picker, and what goes before the pick on an empty line.
+fn pick_words() -> (&'static str, &'static str) {
+    SETUP.get().and_then(|s| s.pick).unwrap_or_default()
+}
+
+/// A CLI's name as a shell function name takes it: letters, digits and `_`.
+pub(crate) fn ident(bin: &str) -> String {
+    bin.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect()
+}
+
+/// Whether Tab may open a picker in this completion: the shell asking is bash, zsh or fish, and the variable
+/// [`tab_picker_var`] of `tool` is not `0`. A completer that opens one falls back to its plain candidates where
+/// it cannot run (no terminal).
+///
+/// ```
+/// assert!(!vc_complete::tab_picker("mycli"), "outside completion");
+/// ```
+pub fn tab_picker(tool: &str) -> bool {
+    matches!(shell(), Some("bash" | "zsh" | "fish"))
+        && std::env::var_os(tab_picker_var(tool)).is_none_or(|v| v != "0")
+}
+
+/// The variable that turns the picker on Tab off for `tool` when it is `0`: `TOOL_TAB_PICKER`.
+///
+/// ```
+/// assert_eq!(vc_complete::tab_picker_var("my-cli"), "MY_CLI_TAB_PICKER");
+/// ```
+pub fn tab_picker_var(tool: &str) -> String {
+    format!("{}_TAB_PICKER", ident(tool).to_ascii_uppercase())
 }
 
 /// The id of a candidate a picker chose: fish puts it in place of the token even when it does not match what was
