@@ -181,6 +181,13 @@ version = "0.0.4"
 dependencies = [
  "clap",
  "clap_complete",
+ "vc_test",
+]
+
+[[package]]
+name = "vc_test"
+version = "0.0.4"
+dependencies = [
  "rustix",
 ]
 

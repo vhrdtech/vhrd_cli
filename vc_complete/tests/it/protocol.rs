@@ -1,8 +1,7 @@
 //! What the binary answers each shell, without the shell: bash driven with the variables readline sets, zsh and fish
-//! by the arguments and variables their registration passes. These run everywhere; `shells.rs` runs the real shells.
-mod support;
-
-use support::*;
+//! by the arguments and variables their registration passes. These run everywhere; `shells` runs the real shells.
+use super::scratch;
+use vc_test::*;
 
 const WORDBREAKS: &str = "\"'><=;|&(:@ \t\n";
 
@@ -12,7 +11,7 @@ fn bash(line: &str) -> Vec<String> {
     let Some(bash) = which("bash") else {
         return vec!["no bash".into()];
     };
-    let dir = Scratch::new("bash");
+    let dir = scratch("bash");
     let script = format!(
         r#"source <(COMPLETE=bash vcdemo)
 COMP_LINE={line}
@@ -127,7 +126,7 @@ fn completers_know_the_shell() {
 
 /// The binary's answer to one completion request, as a shell's registration asks for it.
 fn ask(shell: &str, args: &[&str], env: &[(&str, &str)]) -> String {
-    let dir = Scratch::new(&format!("ask-{shell}"));
+    let dir = scratch(&format!("ask-{shell}"));
     let out = clean(&dir.0.join("bin/vcdemo"), &dir)
         .env("COMPLETE", shell)
         .envs(env.iter().copied())
@@ -202,7 +201,7 @@ fn bash_line_variables_are_read_directly() {
 
 #[test]
 fn registrations_name_the_binary_and_the_function() {
-    let dir = Scratch::new("registration");
+    let dir = scratch("registration");
     for (shell, wants) in [
         (
             "bash",
@@ -237,7 +236,7 @@ fn registrations_name_the_binary_and_the_function() {
 
 #[test]
 fn without_complete_the_cli_runs() {
-    let dir = Scratch::new("run");
+    let dir = scratch("run");
     let out = clean(&dir.0.join("bin/vcdemo"), &dir)
         .args(["open", "beta"])
         .output()

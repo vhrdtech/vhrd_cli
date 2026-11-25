@@ -7,7 +7,7 @@ version = "0.0.4"
 
 [workspace]
 resolver = "3"
-members = ["repo_checks", "vc_build", "vc_complete", "vc_ui", "vc_usage"]
+members = ["repo_checks", "vc_build", "vc_complete", "vc_test", "vc_ui", "vc_usage"]
 
 [workspace.dependencies]
 anyhow = { version = "1.0", default-features = false, features = ["std"] }
@@ -15,10 +15,12 @@ anstyle = { version = "1.0", default-features = false, features = ["std"] }
 clap = { version = "4.6", default-features = false, features = ["std"] }
 clap_complete = { version = "4.6", default-features = false, features = ["unstable-dynamic"] }
 libc = { version = "0.2", default-features = false }
+rustix = { version = "1.1", default-features = false }
 unicode-width = { version = "0.2", default-features = false }
 
 # the crates of this workspace that use each other
 vc_build = { path = "vc_build" }
+vc_test = { path = "vc_test" }
 vc_ui = { path = "vc_ui" }
 
 # Debug info in .dwo files next to the objects, not packed into every test binary: much quicker rebuilds after a
