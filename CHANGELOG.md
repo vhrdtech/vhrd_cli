@@ -4,6 +4,8 @@ All notable changes to the vhrd_cli crates and docs. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-25
+
 ### Added
 
 - `vc_picker`: a fuzzy picker below the prompt with columns, fzf syntax and highlighted matches; `vc_picker::tab` opens it from a completer (PICK-1).
