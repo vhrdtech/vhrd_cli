@@ -144,6 +144,23 @@ fn ask(shell: &str, args: &[&str], env: &[(&str, &str)]) -> String {
 }
 
 #[test]
+fn zsh_and_fish_words_lose_their_quotes() {
+    let index = [("_CLAP_COMPLETE_INDEX", "2"), ("_CLAP_IFS", "\n")];
+    assert_eq!(
+        ask("zsh", &["vcdemo", "open", "'alpha t"], &index),
+        "alpha two:the second document"
+    );
+    assert_eq!(
+        ask("fish", &["vcdemo", "open", "\"it"], &[]),
+        "it's\ta name with a quote\n"
+    );
+    assert_eq!(
+        ask("fish", &["vcdemo", "open", "alpha\\ o"], &[]),
+        "alpha one\tthe first document\n"
+    );
+}
+
+#[test]
 fn zsh_gets_values_with_help_and_escaped_colons() {
     let index = [("_CLAP_COMPLETE_INDEX", "2"), ("_CLAP_IFS", "\n")];
     let got = ask("zsh", &["vcdemo", "open", "al"], &index);

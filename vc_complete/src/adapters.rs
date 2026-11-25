@@ -53,6 +53,15 @@ fn fill(script: &str, shell: &str, var: &str, name: &str, bin: &str, completer: 
     out
 }
 
+/// A word as zsh and fish pass it, quotes and escapes still on (`'alpha t`), as the value it stands for
+/// (`alpha t`): the completers match values, not shell syntax.
+fn unquote(word: OsString) -> OsString {
+    match word.to_str() {
+        Some(w) if w.contains(['\'', '"', '\\']) => split_line(w, "").1.value.into(),
+        _ => word,
+    }
+}
+
 /// The first line of a help text: shells show one line per candidate.
 fn first_line(c: &CompletionCandidate) -> Option<String> {
     c.get_help()
@@ -244,7 +253,7 @@ EXTRA"#;
             .and_then(|i| i.parse().ok())
             .unwrap_or_default();
         let ifs = std::env::var("_CLAP_IFS").unwrap_or_else(|_| "\n".into());
-        let mut args = args;
+        let mut args: Vec<OsString> = args.into_iter().map(unquote).collect();
         if args.len() == index {
             args.push("".into());
         }
@@ -316,6 +325,7 @@ EXTRA"#;
         buf: &mut dyn Write,
     ) -> std::io::Result<()> {
         let _ = SHELL.set("fish");
+        let args: Vec<OsString> = args.into_iter().map(unquote).collect();
         let index = args.len().saturating_sub(1);
         for c in candidates(cmd, args, index, current_dir) {
             if c.get_id().is_some_and(|id| id == PICKED) {
